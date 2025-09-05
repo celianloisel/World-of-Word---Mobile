@@ -43,3 +43,6 @@ app-example
 
 # VS Code
 .vscode/
+
+# Environement File
+.env
