@@ -1,8 +1,12 @@
 import { Text, View } from "react-native";
 import { useEffect, useState } from "react";
 import { useSocketIO } from "@/script/sockets/useSocketIO";
+import Toast from "react-native-toast-message";
+import { NotifApproved } from "./components/notif-approved";
+import { NotifDeclined } from "./components/notif-declined";
+import { toastConfig } from "./toastLayouts";
 
-export default function Index() {
+export default function Index(props: any) {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
     throw new Error("SERVER_URL is not defined");
   }
@@ -14,7 +18,7 @@ export default function Index() {
 
   useEffect(() => {
     if (connected) {
-      emit("join", { username: "test-mobile", role: "mobile" });
+      emit("join", { username: "esteban", role: "mobile" });
     } else {
       setJoined(false);
     }
@@ -34,6 +38,9 @@ export default function Index() {
       <Text>
         {joined ? "✅ Connecté (join-succes)" : "❌ Pas encore rejoint"}
       </Text>
+      <NotifApproved />
+      <NotifDeclined />
+      <Toast config={toastConfig} />
     </View>
   );
 }
