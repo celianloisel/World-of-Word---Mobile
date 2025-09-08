@@ -13,7 +13,10 @@ export default function QrScan() {
           const parsed = JSON.parse(raw);
           router.push({
             pathname: "/username",
-            params: { roomId: parsed.roomId },
+            params: {
+              roomId: parsed.qrPayload.roomId,
+              token: parsed.qrPayload.joinToken,
+            },
           });
         } catch (e) {
           console.error("QR invalide", e);

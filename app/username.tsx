@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Image, View, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { useSocketIO } from "@/script/sockets/useSocketIO";
+import { Image, View, StyleSheet } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSocketIO } from "@/hooks/sockets/useSocketIO";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
@@ -12,33 +12,29 @@ export default function Username() {
   }
 
   const router = useRouter();
+  const params = useLocalSearchParams();
+
   const { connected, emit, on, off } = useSocketIO(
     process.env.EXPO_PUBLIC_SERVER_URL,
   );
   const [username, setUsername] = useState("");
-  const [roomId, setRoomId] = useState<string>("");
 
-  const TEST_TOKEN = "1c08fea9ba074eccaa8aaa1520e5d08f";
-
-  // ⚠️ Hardcode temporaire du roomId : à retirer quand tu auras le scan QR
-  useEffect(() => {
-    setRoomId("test-id");
-  }, []);
+  const token = params.token as string;
+  const roomId = params.token as string;
 
   useEffect(() => {
     const handleJoinSuccess = (payload: {
       roomId: string;
       username: string;
-      socketId: string;
     }) => {
-      // TODO Switch to the player's list screen
+      router.push("/player-list");
     };
 
     on("lobby:join-success", handleJoinSuccess);
     return () => {
       off("lobby:join-success", handleJoinSuccess);
     };
-  }, [on, off]);
+  }, [on, off, router]);
 
   const canSend = connected && username.trim().length > 0;
 
@@ -63,22 +59,13 @@ export default function Username() {
 
             <PrimaryButton
               title="Envoyer"
-              onPress={() =>
-                emit("lobby:join", { token: TEST_TOKEN, username })
-              }
+              onPress={() => emit("lobby:join", { token: token, username })}
               disabled={!canSend}
             />
           </View>
         </View>
 
         <ConnectionStatus connected={connected} roomId={roomId} />
-
-        <Pressable onPress={() => router.push("/qr-scan")}>
-          <Image
-            source={require("@/assets/images/welcome.png")}
-            style={styles.cameraIcon}
-          />
-        </Pressable>
       </View>
     </View>
   );
