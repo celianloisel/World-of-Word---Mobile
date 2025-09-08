@@ -21,7 +21,7 @@ export function TextField({ value, onChangeText, ...rest }: Props) {
 
 const styles = StyleSheet.create({
   input: {
-    width: "85%",
+    width: "100%",
     padding: 12,
     borderWidth: 2,
     borderColor: COLORS.funPinkLight,

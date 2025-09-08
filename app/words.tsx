@@ -121,11 +121,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bottomContainer: {
+    width: "85%",
     position: "absolute",
     bottom: 0,
     left: 15,
     right: 15,
-    gap: 12, // espace entre IndexButton et form
+    gap: 12,
   },
   indexButton: {
     alignItems: "flex-end",

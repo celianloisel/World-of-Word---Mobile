@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSocketIO } from "@/hooks/sockets/useSocketIO";
@@ -99,26 +100,5 @@ const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
     gap: 12,
-  },
-  cameraButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    marginTop: 20,
-  },
-  cameraIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  cameraButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
