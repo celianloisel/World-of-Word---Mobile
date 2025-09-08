@@ -4,25 +4,23 @@ import { COLORS } from "@/constants/colors";
 
 type Props = {
   connected: boolean;
-  joined: boolean;
+  roomId: string;
 };
 
-export function ConnectionStatus({ connected, joined }: Props) {
+export function ConnectionStatus({ connected, roomId }: Props) {
+  const text = connected ? `Connecté • #${roomId}` : "Hors ligne";
+
   return (
     <View style={styles.footer}>
       <View
         style={[
           styles.statusDot,
-          { backgroundColor: connected ? "#16a34a" : "#dc2626" },
+          {
+            backgroundColor: connected ? COLORS.successDark : COLORS.errorDark,
+          },
         ]}
       />
-      <Text style={styles.statusText}>
-        {connected
-          ? joined
-            ? "Connecté • Salon rejoint"
-            : "Connecté • En attente…"
-          : "Hors ligne"}
-      </Text>
+      <Text style={styles.statusText}>{text}</Text>
     </View>
   );
 }
@@ -38,12 +36,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  statusText: {
-    color: COLORS.text,
-  },
+  statusDot: { width: 10, height: 10, borderRadius: 5 },
+  statusText: { color: COLORS.text, fontWeight: "500" },
 });
