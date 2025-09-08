@@ -2,7 +2,7 @@ import React from "react";
 import { QrScanner } from "@/components/QrScanner";
 import { useRouter } from "expo-router";
 
-export default function QrScanScreen() {
+export default function QrScan() {
   const router = useRouter();
 
   return (
