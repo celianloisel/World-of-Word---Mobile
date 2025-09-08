@@ -1,6 +1,6 @@
 import Toast from "react-native-toast-message";
 import { Button } from "react-native";
-import { errorToastConfig } from "../app/toastLayouts";
+import { errorToastConfig } from "../../app/toastLayouts";
 
 export function NotifDeclined(props: any) {
   const showDeclinedToast = () => {

@@ -1,6 +1,6 @@
 import Toast from "react-native-toast-message";
 import { Button } from "react-native";
-import { successToastConfig } from "../app/toastLayouts";
+import { successToastConfig } from "../../app/toastLayouts";
 
 export function NotifApproved(props: any) {
   const showApprovedToast = () => {

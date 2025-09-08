@@ -1,19 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  Pressable,
-  Image,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { Pressable, Image, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useSocketIO } from "@/script/sockets/useSocketIO";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 
-export default function Index() {
+export default function Username() {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
     throw new Error("SERVER_URL is not defined");
   }
@@ -80,11 +73,7 @@ export default function Index() {
 
         <ConnectionStatus connected={connected} roomId={roomId} />
 
-        <Pressable
-          onPress={() => {
-            router.replace("/../components/qrScan");
-          }}
-        >
+        <Pressable onPress={() => router.push("/qr-scan")}>
           <Image
             source={require("@/assets/images/welcome.png")}
             style={styles.cameraIcon}
