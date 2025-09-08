@@ -22,24 +22,32 @@ export default function Index() {
   const { connected, emit, on, off } = useSocketIO(
     process.env.EXPO_PUBLIC_SERVER_URL,
   );
-  const [joined, setJoined] = useState(false);
   const [username, setUsername] = useState("");
+  const [roomId, setRoomId] = useState<string>("");
+
+  const TEST_TOKEN = "1c08fea9ba074eccaa8aaa1520e5d08f";
+
+  // ⚠️ Hardcode temporaire du roomId : à retirer quand tu auras le scan QR
+  useEffect(() => {
+    setRoomId("test-id");
+  }, []);
 
   useEffect(() => {
-    if (connected) {
-      emit("join", { username: "test-mobile2", role: "mobile" });
-    } else {
-      setJoined(false);
-    }
-  }, [connected, emit]);
+    const handleJoinSuccess = (payload: {
+      roomId: string;
+      username: string;
+      socketId: string;
+    }) => {
+      // TODO Switch to the player's list screen
+    };
 
-  useEffect(() => {
-    const handleJoinSucces = () => setJoined(true);
-    on("join-success", handleJoinSucces);
+    on("lobby:join-success", handleJoinSuccess);
     return () => {
-      off("join-success", handleJoinSucces);
+      off("lobby:join-success", handleJoinSuccess);
     };
   }, [on, off]);
+
+  const canSend = connected && username.trim().length > 0;
 
   return (
     <View style={styles.container}>
@@ -56,20 +64,21 @@ export default function Index() {
               value={username}
               onChangeText={setUsername}
               placeholder="Entrez votre pseudo"
+              autoCapitalize="none"
               returnKeyType="done"
             />
 
             <PrimaryButton
               title="Envoyer"
-              onPress={() => {
-                emit("join", { username, role: "mobile" });
-              }}
-              disabled={!username.trim()}
+              onPress={() =>
+                emit("lobby:join", { token: TEST_TOKEN, username })
+              }
+              disabled={!canSend}
             />
           </View>
         </View>
 
-        <ConnectionStatus connected={connected} joined={joined} />
+        <ConnectionStatus connected={connected} roomId={roomId} />
 
         <Pressable
           onPress={() => {
