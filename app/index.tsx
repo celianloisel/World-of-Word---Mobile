@@ -17,10 +17,12 @@ export default function Index() {
           />
         </View>
 
-        <RoundedPrimaryButton
-          onPress={() => router.push("/qr-scan")}
-          title={"Jouer !"}
-        />
+        <View style={styles.buttonContainer}>
+          <RoundedPrimaryButton
+            onPress={() => router.push("/qr-scan")}
+            title="Jouer !"
+          />
+        </View>
       </View>
     </View>
   );
@@ -31,14 +33,11 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     justifyContent: "center",
-    padding: 24,
-    marginBottom: 180,
   },
   topContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 24,
   },
   image: {
     width: "100%",
@@ -46,52 +45,8 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     resizeMode: "contain",
   },
-  formContainer: {
+  buttonContainer: {
+    marginBottom: 128,
     width: "100%",
-    gap: 12,
-  },
-  cameraButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    marginTop: 20,
-  },
-  cameraIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  cameraButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  button: {
-    backgroundColor: "COLORS.funPinkDark",
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 32,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  buttonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.97 }],
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 22,
-    letterSpacing: 1,
   },
 });

@@ -8,7 +8,7 @@ type Props = {
 };
 
 export function ConnectionStatus({ connected, roomId }: Props) {
-  const text = connected ? `Connecté • #${roomId}` : "Hors ligne";
+  const text = connected ? `Connecté` : "Hors ligne";
 
   return (
     <View style={styles.footer}>
@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: COLORS.backgroundStrong,
     borderRadius: 12,
+    marginHorizontal: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },

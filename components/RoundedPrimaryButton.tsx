@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 32,
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 8,
