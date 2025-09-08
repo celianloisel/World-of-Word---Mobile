@@ -82,7 +82,7 @@ export default function Index() {
 
         <Pressable
           onPress={() => {
-            router.replace("./components/qrScan");
+            router.replace("/../components/qrScan");
           }}
         >
           <Image
