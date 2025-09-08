@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   Platform,
   SafeAreaView,
@@ -21,12 +21,11 @@ type QrScannerProps = {
 export function QrScanner({
   onCode,
   onCancel,
-  title = "Scanne le QR",
-  boxSize = 260,
+  title = "Scanne le QR de la salle",
+  boxSize = 300,
   autoPauseAfterScanMs,
 }: QrScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
-  const [torch, setTorch] = useState<"on" | "off">("off");
   const locked = useRef(false);
 
   const handleScanned = useCallback(
@@ -47,20 +46,20 @@ export function QrScanner({
   if (!permission)
     return (
       <View style={styles.center}>
-        <Text>...</Text>
+        <Text style={styles.loading}>…</Text>
       </View>
     );
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.center}>
+      <SafeAreaView style={[styles.center, { backgroundColor: "transparent" }]}>
         <Text style={styles.title}>Accès à la caméra requis</Text>
         <TouchableOpacity style={styles.primaryBtn} onPress={requestPermission}>
           <Text style={styles.primaryBtnText}>Autoriser</Text>
         </TouchableOpacity>
         {onCancel ? (
-          <TouchableOpacity onPress={onCancel} style={styles.secondaryBtn}>
-            <Text style={styles.secondaryBtnText}>Annuler</Text>
+          <TouchableOpacity onPress={onCancel} style={styles.linkBtn}>
+            <Text style={styles.linkText}>Annuler</Text>
           </TouchableOpacity>
         ) : null}
       </SafeAreaView>
@@ -69,50 +68,46 @@ export function QrScanner({
 
   return (
     <SafeAreaView style={styles.container}>
-      {Platform.OS === "android" ? <StatusBar hidden /> : null}
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
 
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
 
-      <View style={[styles.cameraWrapper, { width: boxSize, height: boxSize }]}>
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          facing="back"
-          enableTorch={torch === "on"}
-          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          onBarcodeScanned={handleScanned}
-        />
+      <View style={[styles.card, { width: boxSize, padding: 10 }]}>
+        <View style={[styles.cameraShell, { borderRadius: 24 }]}>
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+            onBarcodeScanned={handleScanned}
+          />
 
-        <View style={[styles.frame, { width: boxSize, height: boxSize }]}>
-          <View style={styles.cornerTL} />
-          <View style={styles.cornerTR} />
-          <View style={styles.cornerBL} />
-          <View style={styles.cornerBR} />
+          <View style={styles.frame}>
+            <View style={styles.cornerTL} />
+            <View style={styles.cornerTR} />
+            <View style={styles.cornerBL} />
+            <View style={styles.cornerBR} />
+          </View>
         </View>
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.secondaryBtn}
-          onPress={() => setTorch((t) => (t === "on" ? "off" : "on"))}
-        >
-          <Text style={styles.secondaryBtnText}>
-            {torch === "on" ? "Éteindre la lampe" : "Allumer la lampe"}
-          </Text>
+      {onCancel ? (
+        <TouchableOpacity onPress={onCancel} style={styles.linkBtn}>
+          <Text style={styles.linkText}>Annuler</Text>
         </TouchableOpacity>
-
-        {onCancel ? (
-          <TouchableOpacity onPress={onCancel} style={styles.linkBtn}>
-            <Text style={styles.linkText}>Annuler</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+      ) : null}
     </SafeAreaView>
   );
 }
 
 const corner = {
-  width: 28,
-  height: 28,
+  width: 22,
+  height: 22,
   borderColor: "white",
   position: "absolute" as const,
 };
@@ -120,75 +115,102 @@ const corner = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "transparent",
     alignItems: "center",
-    justifyContent: "flex-start",
-    backgroundColor: "black",
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "android" ? 28 : 0,
+    paddingBottom: 24,
   },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  header: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: 8,
+  },
   title: {
     color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 24,
+    fontSize: 20,
+    fontWeight: "700",
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  cameraWrapper: {
-    borderRadius: 16,
+  loading: { color: "white", fontSize: 16, opacity: 0.8 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+
+  card: {
+    alignItems: "center",
+    borderRadius: 28,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 12,
+  },
+  cameraShell: {
+    width: "100%",
+    aspectRatio: 1,
     overflow: "hidden",
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.2)",
   },
+
   frame: {
     ...StyleSheet.absoluteFillObject,
     borderColor: "rgba(255,255,255,0.25)",
     borderWidth: 1,
+    borderRadius: 24,
   },
   cornerTL: {
     ...corner,
-    top: 0,
-    left: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
+    top: 10,
+    left: 10,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
     borderRadius: 2,
   },
   cornerTR: {
     ...corner,
-    top: 0,
-    right: 0,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
+    top: 10,
+    right: 10,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
     borderRadius: 2,
   },
   cornerBL: {
     ...corner,
-    bottom: 0,
-    left: 0,
-    borderBottomWidth: 4,
-    borderLeftWidth: 4,
+    bottom: 10,
+    left: 10,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
     borderRadius: 2,
   },
   cornerBR: {
     ...corner,
-    bottom: 0,
-    right: 0,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
+    bottom: 10,
+    right: 10,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
     borderRadius: 2,
   },
 
-  actions: { marginTop: 24, alignItems: "center", gap: 12 },
   primaryBtn: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.24)",
   },
   primaryBtnText: { color: "white", fontWeight: "700" },
-  secondaryBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.12)",
+  linkBtn: { paddingVertical: 12, paddingHorizontal: 8 },
+  linkText: {
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: "700",
+    textShadowColor: "rgba(0,0,0,0.2)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  secondaryBtnText: { color: "white", fontWeight: "600" },
-  linkBtn: { padding: 8 },
-  linkText: { color: "rgba(255,255,255,0.8)" },
 });
