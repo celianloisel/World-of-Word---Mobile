@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Image, View, StyleSheet } from "react-native";
+import {
+  Pressable,
+  Image,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+} from "react-native";
+import { useRouter } from "expo-router";
 import { useSocketIO } from "@/script/sockets/useSocketIO";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -10,6 +18,7 @@ export default function Index() {
     throw new Error("SERVER_URL is not defined");
   }
 
+  const router = useRouter();
   const { connected, emit, on, off } = useSocketIO(
     process.env.EXPO_PUBLIC_SERVER_URL,
   );
@@ -61,6 +70,17 @@ export default function Index() {
         </View>
 
         <ConnectionStatus connected={connected} joined={joined} />
+
+        <Pressable
+          onPress={() => {
+            router.replace("./components/qrScan");
+          }}
+        >
+          <Image
+            source={require("@/assets/images/welcome.png")}
+            style={styles.cameraIcon}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -89,5 +109,26 @@ const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
     gap: 12,
+  },
+  cameraButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 20,
+  },
+  cameraIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  cameraButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
