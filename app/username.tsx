@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Image, View, StyleSheet } from "react-native";
+import {
+  Image,
+  View,
+  StyleSheet,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSocketIO } from "@/hooks/sockets/useSocketIO";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
@@ -39,35 +44,37 @@ export default function Username() {
   const canSend = connected && username.trim().length > 0;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inner}>
-        <View style={styles.topContainer}>
-          <Image
-            source={require("@/assets/images/welcome.png")}
-            style={styles.image}
-            accessibilityLabel="Bienvenue"
-          />
-
-          <View style={styles.formContainer}>
-            <TextField
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Entrez votre pseudo"
-              autoCapitalize="none"
-              returnKeyType="done"
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <View style={styles.inner}>
+          <View style={styles.topContainer}>
+            <Image
+              source={require("@/assets/images/welcome.png")}
+              style={styles.image}
+              accessibilityLabel="Bienvenue"
             />
 
-            <PrimaryButton
-              title="Envoyer"
-              onPress={() => emit("lobby:join", { token: token, username })}
-              disabled={!canSend}
-            />
+            <View style={styles.formContainer}>
+              <TextField
+                value={username}
+                onChangeText={setUsername}
+                placeholder="Entrez votre pseudo"
+                autoCapitalize="none"
+                returnKeyType="done"
+              />
+
+              <PrimaryButton
+                title="Envoyer"
+                onPress={() => emit("lobby:join", { token: token, username })}
+                disabled={!canSend}
+              />
+            </View>
           </View>
-        </View>
 
-        <ConnectionStatus connected={connected} roomId={roomId} />
+          <ConnectionStatus connected={connected} roomId={roomId} />
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
