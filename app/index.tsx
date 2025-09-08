@@ -1,5 +1,11 @@
 import React from "react";
-import { Image, View, StyleSheet } from "react-native";
+import {
+  Image,
+  View,
+  StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { RoundedPrimaryButton } from "@/components/RoundedPrimaryButton";
 
@@ -7,13 +13,20 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inner}>
-        <View style={styles.topContainer}>
-          <Image
-            source={require("@/assets/images/wow.png")}
-            style={styles.image}
-            accessibilityLabel="Bienvenue"
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <View style={styles.inner}>
+          <View style={styles.topContainer}>
+            <Image
+              source={require("@/assets/images/wow.png")}
+              style={styles.image}
+              accessibilityLabel="Bienvenue"
+            />
+          </View>
+
+          <RoundedPrimaryButton
+            onPress={() => router.push("/words")}
+            title={"Debug"}
           />
         </View>
 
@@ -24,7 +37,7 @@ export default function Index() {
           />
         </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
