@@ -42,9 +42,9 @@ export default function Words() {
       // TODO Switch to the player's list screen
     };
 
-    on("lobby:join-success", handleJoinSuccess);
+    on("lobby:join:success", handleJoinSuccess);
     return () => {
-      off("lobby:join-success", handleJoinSuccess);
+      off("lobby:join:success", handleJoinSuccess);
     };
   }, [on, off]);
 

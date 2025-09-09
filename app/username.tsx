@@ -40,8 +40,8 @@ export default function Username() {
       });
     };
 
-    on("lobby:join-success", handleJoinSuccess);
-    return () => off("lobby:join-success", handleJoinSuccess);
+    on("lobby:join:success", handleJoinSuccess);
+    return () => off("lobby:join:success", handleJoinSuccess);
   }, [on, off, router]);
 
   const canSend = connected && username.trim().length > 0;
