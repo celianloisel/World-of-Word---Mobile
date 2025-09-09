@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   Platform,
   SafeAreaView,
@@ -14,12 +14,14 @@ type QrScannerProps = {
   onCode: (data: string) => void;
   boxSize?: number;
   autoPauseAfterScanMs?: number;
+  active?: boolean;
 };
 
 export function QrScanner({
   onCode,
   boxSize = 300,
   autoPauseAfterScanMs,
+  active = true,
 }: QrScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const locked = useRef(false);
@@ -38,6 +40,12 @@ export function QrScanner({
     },
     [onCode, autoPauseAfterScanMs],
   );
+
+  useEffect(() => {
+    if (!active) {
+      locked.current = false;
+    }
+  }, [active]);
 
   if (!permission)
     return (
@@ -64,16 +72,19 @@ export function QrScanner({
         translucent
         backgroundColor="transparent"
       />
-
       <View style={[styles.card, { width: boxSize, padding: 10 }]}>
         <View style={[styles.cameraShell, { borderRadius: 24 }]}>
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-            onBarcodeScanned={handleScanned}
-          />
+          {/* ⬇️ Monter la caméra uniquement si actif */}
+          {active && (
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              onBarcodeScanned={handleScanned}
+            />
+          )}
 
+          {/* Sinon, on peut garder le cadre visuel */}
           <View style={styles.frame}>
             <View style={styles.cornerTL} />
             <View style={styles.cornerTR} />

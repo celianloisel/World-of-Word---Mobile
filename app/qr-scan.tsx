@@ -7,10 +7,12 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { QrScanner } from "@/components/QrScanner";
 
 export default function QrScan() {
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,6 +22,7 @@ export default function QrScan() {
 
       <View style={styles.scannerWrapper}>
         <QrScanner
+          active={isFocused}
           onCode={(raw) => {
             try {
               const parsed = JSON.parse(raw);
