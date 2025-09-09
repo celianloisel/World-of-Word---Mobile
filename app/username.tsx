@@ -12,10 +12,17 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 
+type Player = { username: string; socketId: string };
+type JoinSuccessPayload = {
+  roomId: string;
+  username: string;
+  socketId: string;
+  players: Player[];
+};
+
 export default function Username() {
-  if (!process.env.EXPO_PUBLIC_SERVER_URL) {
+  if (!process.env.EXPO_PUBLIC_SERVER_URL)
     throw new Error("SERVER_URL is not defined");
-  }
 
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -26,20 +33,21 @@ export default function Username() {
   const [username, setUsername] = useState("");
 
   const token = params.token as string;
-  const roomId = params.token as string;
+  const roomId = params.roomId as string;
 
   useEffect(() => {
-    const handleJoinSuccess = (payload: {
-      roomId: string;
-      username: string;
-    }) => {
-      router.push("/player-list");
+    const handleJoinSuccess = (payload: JoinSuccessPayload) => {
+      router.push({
+        pathname: "/player-list",
+        params: {
+          roomId: payload.roomId,
+          players: JSON.stringify(payload.players),
+        },
+      });
     };
 
     on("lobby:join-success", handleJoinSuccess);
-    return () => {
-      off("lobby:join-success", handleJoinSuccess);
-    };
+    return () => off("lobby:join-success", handleJoinSuccess);
   }, [on, off, router]);
 
   const canSend = connected && username.trim().length > 0;
@@ -66,7 +74,7 @@ export default function Username() {
 
               <PrimaryButton
                 title="Envoyer"
-                onPress={() => emit("lobby:join", { token: token, username })}
+                onPress={() => emit("lobby:join", { token, username })}
                 disabled={!canSend}
               />
             </View>
@@ -81,10 +89,7 @@ export default function Username() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  inner: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
+  inner: { flex: 1, justifyContent: "space-between" },
   topContainer: {
     flex: 1,
     justifyContent: "center",
@@ -97,8 +102,5 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     resizeMode: "contain",
   },
-  formContainer: {
-    width: "100%",
-    gap: 12,
-  },
+  formContainer: { width: "100%", gap: 12 },
 });
