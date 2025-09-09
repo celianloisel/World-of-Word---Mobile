@@ -7,7 +7,7 @@ import {
   Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSocketIO } from "@/hooks/sockets/useSocketIO";
+import { useSocket } from "@/contexts/socketContext";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
@@ -21,15 +21,9 @@ type JoinSuccessPayload = {
 };
 
 export default function Username() {
-  if (!process.env.EXPO_PUBLIC_SERVER_URL)
-    throw new Error("SERVER_URL is not defined");
-
   const router = useRouter();
   const params = useLocalSearchParams();
-
-  const { connected, emit, on, off } = useSocketIO(
-    process.env.EXPO_PUBLIC_SERVER_URL,
-  );
+  const { connected, emit, on, off } = useSocket();
   const [username, setUsername] = useState("");
 
   const token = params.token as string;
@@ -62,7 +56,6 @@ export default function Username() {
               style={styles.image}
               accessibilityLabel="Bienvenue"
             />
-
             <View style={styles.formContainer}>
               <TextField
                 value={username}
@@ -71,7 +64,6 @@ export default function Username() {
                 autoCapitalize="none"
                 returnKeyType="done"
               />
-
               <PrimaryButton
                 title="Envoyer"
                 onPress={() => emit("lobby:join", { token, username })}
@@ -79,7 +71,6 @@ export default function Username() {
               />
             </View>
           </View>
-
           <ConnectionStatus connected={connected} roomId={roomId} />
         </View>
       </View>

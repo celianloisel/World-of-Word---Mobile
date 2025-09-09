@@ -1,27 +1,33 @@
 import { Stack } from "expo-router";
 import { ImageBackground, StyleSheet, View } from "react-native";
+import { SocketProvider } from "@/contexts/socketContext";
 
 export default function RootLayout() {
-  return (
-    <ImageBackground
-      source={require("@/assets/images/background.png")}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay} />
+  if (!process.env.EXPO_PUBLIC_SERVER_URL) {
+    throw new Error("SERVER_URL is not defined");
+  }
 
-      {/* Wrapper avec padding global */}
-      <View style={styles.wrapper}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: "transparent",
-            },
-          }}
-        />
-      </View>
-    </ImageBackground>
+  return (
+    <SocketProvider url={process.env.EXPO_PUBLIC_SERVER_URL}>
+      <ImageBackground
+        source={require("@/assets/images/background.png")}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
+
+        <View style={styles.wrapper}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: "transparent",
+              },
+            }}
+          />
+        </View>
+      </ImageBackground>
+    </SocketProvider>
   );
 }
 
