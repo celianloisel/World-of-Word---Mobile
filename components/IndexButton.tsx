@@ -4,15 +4,14 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 type Props = {
-  onPress: () => void;
   disabled?: boolean;
 };
 
-export function IndexButton({ onPress, disabled = false }: Props) {
+export function IndexButton({ disabled = false }: Props) {
   return (
     <TouchableOpacity
       style={[styles.button, disabled && styles.disabled]}
-      onPress={onPress}
+      onPress={toggleModal}
       activeOpacity={0.7}
       disabled={disabled}
     >

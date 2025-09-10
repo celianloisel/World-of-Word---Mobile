@@ -13,7 +13,7 @@ import { useSocketIO } from "@/hooks/sockets/useSocketIO";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 import { COLORS } from "@/constants/colors";
-import { IndexButton } from "@/components/IndexButton";
+import { WordIndex } from "@/components/WordIndex";
 
 export default function Words() {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
@@ -68,7 +68,7 @@ export default function Words() {
             {/* Bloc bas : IndexButton au-dessus du formulaire */}
             <View style={styles.bottomContainer}>
               <View style={styles.indexButton}>
-                <IndexButton onPress={() => router.push("/words")} />
+                <WordIndex />
               </View>
 
               <View style={styles.formContainer}>
