@@ -34,8 +34,8 @@ export default function PlayerList() {
       });
     };
 
-    if (connected) on("lobby:player-joined", handlePlayerJoined);
-    return () => off("lobby:player-joined", handlePlayerJoined);
+    if (connected) on("lobby:player:joined", handlePlayerJoined);
+    return () => off("lobby:player:joined", handlePlayerJoined);
   }, [connected, on, off]);
 
   return (
