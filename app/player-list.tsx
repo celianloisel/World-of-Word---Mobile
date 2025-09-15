@@ -54,13 +54,6 @@ export default function PlayerList() {
           <Text style={styles.empty}>En attente de joueurs…</Text>
         }
       />
-
-      <View style={styles.footer}>
-        <RoundedPrimaryButton
-          title="Jouer !"
-          onPress={() => router.push("/")}
-        />
-      </View>
     </View>
   );
 }

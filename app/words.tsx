@@ -8,47 +8,48 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useSocketIO } from "@/hooks/sockets/useSocketIO";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 import { COLORS } from "@/constants/colors";
 import { WordIndex } from "@/components/WordIndex";
+import { useSocket } from "@/contexts/socketContext";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
+
+type Player = { username: string; socketId: string };
+type WordSubmitSuccessPayload = {
+  roomId: string;
+  players?: Player[];
+};
 
 export default function Words() {
-  if (!process.env.EXPO_PUBLIC_SERVER_URL) {
-    throw new Error("SERVER_URL is not defined");
-  }
-
   const router = useRouter();
-  const { connected, emit, on, off } = useSocketIO(
-    process.env.EXPO_PUBLIC_SERVER_URL,
-  );
-  const [effect, setEffect] = useState("");
-  const [roomId, setRoomId] = useState<string>("");
+  const params = useLocalSearchParams();
+  const { connected, emit, on, off } = useSocket();
 
-  const TEST_TOKEN = "1c08fea9ba074eccaa8aaa1520e5d08f";
+  const token = (params.token as string) ?? "1c08fea9ba074eccaa8aaa1520e5d08f";
+  const roomId = params.roomId as string;
 
-  useEffect(() => {
-    setRoomId("test-id");
-  }, []);
+  const [word, setWord] = useState("");
 
   useEffect(() => {
-    const handleJoinSuccess = (payload: {
-      roomId: string;
-      username: string;
-      socketId: string;
-    }) => {
-      // TODO Switch to the player's list screen
+    const handleWordSubmitSuccess = (payload: WordSubmitSuccessPayload) => {
+      if (payload?.players) {
+        router.push({
+          pathname: "/player-list",
+          params: {
+            roomId: payload.roomId,
+            players: JSON.stringify(payload.players),
+          },
+        });
+      }
     };
 
-    on("lobby:join:success", handleJoinSuccess);
-    return () => {
-      off("lobby:join:success", handleJoinSuccess);
-    };
-  }, [on, off]);
+    on("word:submit:success", handleWordSubmitSuccess);
+    return () => off("word:submit:success", handleWordSubmitSuccess);
+  }, [on, off, router]);
 
-  const canSend = connected && effect.trim().length > 0;
+  const canSend = connected && word.trim().length > 0;
 
   return (
     <KeyboardAvoidingView
@@ -58,14 +59,12 @@ export default function Words() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          {/* Score en haut de page */}
           <View style={styles.scoreContainer}>
             <Text style={styles.scoreText}>Score du joueur</Text>
             <Text style={styles.scoreValue}>120</Text>
           </View>
 
           <View style={styles.inner}>
-            {/* Bloc bas : IndexButton au-dessus du formulaire */}
             <View style={styles.bottomContainer}>
               <View style={styles.indexButton}>
                 <WordIndex />
@@ -73,24 +72,23 @@ export default function Words() {
 
               <View style={styles.formContainer}>
                 <TextField
-                  value={effect}
-                  onChangeText={setEffect}
-                  placeholder="Entrez un effet"
+                  value={word}
+                  onChangeText={setWord}
+                  placeholder="Entrez un mot"
                   autoCapitalize="none"
                   returnKeyType="done"
                 />
 
                 <PrimaryButton
                   title="Envoyer"
-                  onPress={() =>
-                    emit("lobby:join", { token: TEST_TOKEN, effect })
-                  }
+                  onPress={() => emit("word:submit", { token, roomId, word })}
                   disabled={!canSend}
                 />
               </View>
             </View>
           </View>
         </View>
+        <ConnectionStatus connected={connected} roomId={roomId} />
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
