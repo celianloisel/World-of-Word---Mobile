@@ -19,6 +19,8 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 type Player = { username: string; socketId: string };
 type WordSubmitSuccessPayload = {
   roomId: string;
+  word: string;
+  socketId: string;
   players?: Player[];
 };
 
@@ -27,7 +29,7 @@ export default function Words() {
   const params = useLocalSearchParams();
   const { connected, emit, on, off } = useSocket();
 
-  const token = (params.token as string) ?? "1c08fea9ba074eccaa8aaa1520e5d08f";
+  const token = params.token as string;
   const roomId = params.roomId as string;
 
   const [word, setWord] = useState("");
@@ -88,8 +90,8 @@ export default function Words() {
             </View>
           </View>
         </View>
-        <ConnectionStatus connected={connected} roomId={roomId} />
       </TouchableWithoutFeedback>
+      <ConnectionStatus connected={connected} roomId={roomId} />
     </KeyboardAvoidingView>
   );
 }
