@@ -33,6 +33,8 @@ export default function Words() {
   const roomId = params.roomId as string;
 
   const [word, setWord] = useState("");
+  const [visible, setVisible] = React.useState(false);
+  const [value, setValue] = React.useState("Option A");
 
   useEffect(() => {
     const handleWordSubmitSuccess = (payload: WordSubmitSuccessPayload) => {

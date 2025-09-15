@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 import { ImageBackground, StyleSheet, View } from "react-native";
 import { SocketProvider } from "@/contexts/socketContext";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "@/app/toastLayouts";
 
 export default function RootLayout() {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
@@ -26,6 +28,7 @@ export default function RootLayout() {
             }}
           />
         </View>
+        <Toast config={toastConfig} />
       </ImageBackground>
     </SocketProvider>
   );
