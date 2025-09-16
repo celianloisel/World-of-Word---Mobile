@@ -20,6 +20,7 @@ type Player = { username: string; socketId: string };
 type WordSubmitSuccessPayload = {
   roomId: string;
   word: string;
+  platform: string;
   socketId: string;
   players?: Player[];
 };
@@ -33,8 +34,7 @@ export default function Words() {
   const roomId = params.roomId as string;
 
   const [word, setWord] = useState("");
-  const [visible, setVisible] = React.useState(false);
-  const [value, setValue] = React.useState("Option A");
+  const [platform, setPlatform] = useState("");
 
   useEffect(() => {
     const handleWordSubmitSuccess = (payload: WordSubmitSuccessPayload) => {
@@ -85,7 +85,9 @@ export default function Words() {
 
                 <PrimaryButton
                   title="Envoyer"
-                  onPress={() => emit("word:submit", { token, roomId, word })}
+                  onPress={() =>
+                    emit("word:submit", { token, roomId, word, platform })
+                  }
                   disabled={!canSend}
                 />
               </View>
