@@ -88,7 +88,6 @@ export default function Words() {
             </View>
           </View>
         </View>
-        <ConnectionStatus connected={connected} roomId={roomId} />
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );

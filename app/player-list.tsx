@@ -13,6 +13,10 @@ type PlayerJoinedPayload = {
   socketId: string;
 };
 
+type GameStartPayload = {
+  roomId?: string;
+};
+
 export default function PlayerList() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -34,9 +38,27 @@ export default function PlayerList() {
       });
     };
 
-    if (connected) on("lobby:player:joined", handlePlayerJoined);
-    return () => off("lobby:player:joined", handlePlayerJoined);
-  }, [connected, on, off]);
+    const handleGameStart = (payload: GameStartPayload) => {
+      const roomIdFromParams =
+        (params.roomId as string | undefined) || undefined;
+      const roomId = payload?.roomId ?? roomIdFromParams;
+
+      router.replace({
+        pathname: "/words",
+        params: roomId ? { roomId } : undefined,
+      });
+    };
+
+    if (connected) {
+      on("lobby:player:joined", handlePlayerJoined);
+      on("game:start:notify", handleGameStart);
+    }
+
+    return () => {
+      off("lobby:player:joined", handlePlayerJoined);
+      off("game:start:notify", handleGameStart);
+    };
+  }, [connected, on, off, params.roomId, router]);
 
   return (
     <View style={styles.container}>
