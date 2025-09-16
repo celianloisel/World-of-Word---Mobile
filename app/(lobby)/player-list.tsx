@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSocket } from "@/contexts/socketContext";
-import { useGame } from "@/contexts/gameContext";
+import { useGame, Word } from "@/contexts/gameContext";
 import { COLORS } from "@/constants/colors";
 import PlayerCard from "@/components/PlayerCard";
 
@@ -13,7 +13,12 @@ type PlayerJoinedPayload = {
   socketId: string;
 };
 type GameStartPayload = { roomId?: string };
-type GameWordsPayload = { words: string[]; roomId?: string };
+
+type GameWordsPayload = {
+  roomId?: string;
+  words?: (Word | string | { word: string; type?: string })[];
+  wordTypes?: { word: string; type?: string }[];
+};
 
 export default function PlayerList() {
   const router = useRouter();
@@ -51,7 +56,9 @@ export default function PlayerList() {
     };
 
     const handleGameWords = (payload: GameWordsPayload) => {
-      if (payload?.words) {
+      if (payload?.wordTypes?.length) {
+        setWords(payload.wordTypes);
+      } else if (payload?.words?.length) {
         setWords(payload.words);
       }
     };
