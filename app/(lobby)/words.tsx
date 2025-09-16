@@ -12,7 +12,6 @@ import {
 import { COLORS } from "@/constants/colors";
 import { WordIndex } from "@/components/WordIndex";
 import { TextField } from "@/components/TextField";
-import { PrimaryButton } from "@/components/PrimaryButton";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5 } from "@expo/vector-icons";
 
@@ -36,8 +35,8 @@ export default function Words() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
           <View style={styles.scoreContainer}>
-            <Text style={styles.scoreText}>Liste des mots</Text>
-            <Text style={styles.scoreValue}>{words.length}</Text>
+            <Text style={styles.scoreText}>Score</Text>
+            <Text style={styles.scoreValue}>0</Text>
           </View>
 
           <View style={styles.inner}>
