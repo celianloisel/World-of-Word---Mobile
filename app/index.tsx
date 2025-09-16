@@ -23,11 +23,6 @@ export default function Index() {
               accessibilityLabel="Bienvenue"
             />
           </View>
-
-          <RoundedPrimaryButton
-            onPress={() => router.push("/words")}
-            title={"Debug"}
-          />
         </View>
 
         <View style={styles.buttonContainer}>

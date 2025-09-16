@@ -71,7 +71,6 @@ export default function Username() {
               />
             </View>
           </View>
-          <ConnectionStatus connected={connected} roomId={roomId} />
         </View>
       </View>
     </TouchableWithoutFeedback>

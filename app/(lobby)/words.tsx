@@ -49,6 +49,32 @@ export default function Words() {
     return () => off("word:submit:success", handleWordSubmitSuccess);
   }, [on, off, router]);
 
+  useEffect(() => {
+    const handleDisconnect = () => {
+      router.replace({
+        pathname: "/",
+        params: { reason: "socket_disconnected" },
+      });
+    };
+    const handleConnectError = () => {
+      router.replace({ pathname: "/", params: { reason: "connect_error" } });
+    };
+
+    on("disconnect", handleDisconnect);
+    on("connect_error", handleConnectError);
+
+    return () => {
+      off("disconnect", handleDisconnect);
+      off("connect_error", handleConnectError);
+    };
+  }, [on, off, router]);
+
+  useEffect(() => {
+    if (!connected) {
+      router.replace({ pathname: "/", params: { reason: "offline" } });
+    }
+  }, [connected, router]);
+
   const canSend = connected && word.trim().length > 0;
 
   return (

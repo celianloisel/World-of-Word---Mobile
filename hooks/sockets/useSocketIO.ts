@@ -1,9 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 
-export function useSocketIO(url: string, opts?: Parameters<typeof io>[1]) {
+type UseSocketIOOptions = Parameters<typeof io>[1] & {
+  onDisconnectWhileInLobby?: (reason?: Socket.DisconnectReason | Error) => void;
+};
+
+export function useSocketIO(url: string, opts?: UseSocketIOOptions) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
+
+  const lobbyIdRef = useRef<string | null>(null);
+  const [isInLobby, setIsInLobby] = useState(false);
+
+  const setLobbyId = useCallback((lobbyId: string | null) => {
+    lobbyIdRef.current = lobbyId;
+    setIsInLobby(Boolean(lobbyId));
+  }, []);
 
   useEffect(() => {
     const socket = io(url, {
@@ -16,8 +28,20 @@ export function useSocketIO(url: string, opts?: Parameters<typeof io>[1]) {
     socketRef.current = socket;
 
     const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
-    const onConnectError = () => setConnected(false);
+
+    const onDisconnect = (reason: Socket.DisconnectReason) => {
+      setConnected(false);
+      if (lobbyIdRef.current && opts?.onDisconnectWhileInLobby) {
+        opts.onDisconnectWhileInLobby(reason);
+      }
+    };
+
+    const onConnectError = (err: Error) => {
+      setConnected(false);
+      if (lobbyIdRef.current && opts?.onDisconnectWhileInLobby) {
+        opts.onDisconnectWhileInLobby(err);
+      }
+    };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -50,5 +74,13 @@ export function useSocketIO(url: string, opts?: Parameters<typeof io>[1]) {
     [],
   );
 
-  return { connected, emit, on, off };
+  return {
+    connected,
+    emit,
+    on,
+    off,
+    setLobbyId,
+    isInLobby,
+    socket: socketRef.current,
+  };
 }

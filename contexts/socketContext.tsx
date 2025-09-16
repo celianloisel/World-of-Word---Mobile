@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
   useCallback,
+  useMemo,
 } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -14,6 +15,8 @@ interface SocketContextType {
   emit: (event: string, payload?: any) => void;
   on: <T = any>(event: string, handler: (data: T) => void) => void;
   off: <T = any>(event: string, handler: (data: T) => void) => void;
+  isInLobby: boolean;
+  setLobbyId: (id: string | null) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -27,6 +30,13 @@ export function SocketProvider({ children, url }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
 
+  const lobbyIdRef = useRef<string | null>(null);
+  const [isInLobby, setIsInLobby] = useState(false);
+  const setLobbyId = useCallback((id: string | null) => {
+    lobbyIdRef.current = id;
+    setIsInLobby(Boolean(id));
+  }, []);
+
   useEffect(() => {
     if (!socketRef.current) {
       const socket = io(url, {
@@ -39,14 +49,16 @@ export function SocketProvider({ children, url }: SocketProviderProps) {
 
       const onConnect = () => setConnected(true);
       const onDisconnect = () => setConnected(false);
+      const onConnectError = () => setConnected(false);
 
       socket.on("connect", onConnect);
       socket.on("disconnect", onDisconnect);
-      socket.on("connect_error", () => setConnected(false));
+      socket.on("connect_error", onConnectError);
     }
 
     return () => {
       if (socketRef.current) {
+        socketRef.current.removeAllListeners();
         socketRef.current.close();
         socketRef.current = null;
       }
@@ -71,13 +83,18 @@ export function SocketProvider({ children, url }: SocketProviderProps) {
     [],
   );
 
-  const value: SocketContextType = {
-    socket: socketRef.current,
-    connected,
-    emit,
-    on,
-    off,
-  };
+  const value = useMemo<SocketContextType>(
+    () => ({
+      socket: socketRef.current,
+      connected,
+      emit,
+      on,
+      off,
+      isInLobby,
+      setLobbyId,
+    }),
+    [connected, emit, on, off, isInLobby, setLobbyId],
+  );
 
   return (
     <SocketContext.Provider value={value}>{children}</SocketContext.Provider>

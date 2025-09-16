@@ -1,6 +1,37 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import { ImageBackground, StyleSheet, View } from "react-native";
-import { SocketProvider } from "@/contexts/socketContext";
+import { SocketProvider, useSocket } from "@/contexts/socketContext";
+
+function RootBoundary() {
+  const router = useRouter();
+  const { on, off, connected, isInLobby } = useSocket();
+
+  useEffect(() => {
+    const toHome = (reason: string) => {
+      if (isInLobby) {
+        router.replace({ pathname: "/", params: { reason } });
+      }
+    };
+    const handleDisconnect = () => toHome("socket_disconnected");
+    const handleConnectError = () => toHome("connect_error");
+
+    on("disconnect", handleDisconnect);
+    on("connect_error", handleConnectError);
+    return () => {
+      off("disconnect", handleDisconnect);
+      off("connect_error", handleConnectError);
+    };
+  }, [on, off, router, isInLobby]);
+
+  useEffect(() => {
+    if (!connected && isInLobby) {
+      router.replace({ pathname: "/", params: { reason: "offline" } });
+    }
+  }, [connected, isInLobby, router]);
+
+  return null;
+}
 
 export default function RootLayout() {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
@@ -15,26 +46,23 @@ export default function RootLayout() {
         resizeMode="cover"
       >
         <View style={styles.overlay} />
-
         <View style={styles.wrapper}>
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: {
-                backgroundColor: "transparent",
-              },
+              contentStyle: { backgroundColor: "transparent" },
             }}
           />
         </View>
+
+        <RootBoundary />
       </ImageBackground>
     </SocketProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
+  background: { flex: 1 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.3)",
