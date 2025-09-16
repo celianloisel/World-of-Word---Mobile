@@ -5,7 +5,7 @@ export const successToastConfig = (props: any) => (
   <SuccessToast
     {...props}
     style={{
-      borderLeftColor: COLORS.funGreen,
+      borderLeftColor: COLORS.funGreenDark,
       borderLeftWidth: 6,
       backgroundColor: COLORS.backgroundStrong,
       marginTop: 16,
