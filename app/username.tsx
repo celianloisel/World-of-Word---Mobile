@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Image,
   View,
   StyleSheet,
   TouchableWithoutFeedback,
@@ -8,9 +7,10 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSocket } from "@/contexts/socketContext";
-import { ConnectionStatus } from "@/components/ConnectionStatus";
+// import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
+import AvatarGenerator from "@/components/Avatar";
 
 type Player = { username: string; socketId: string };
 type JoinSuccessPayload = {
@@ -25,9 +25,10 @@ export default function Username() {
   const params = useLocalSearchParams();
   const { connected, emit, on, off } = useSocket();
   const [username, setUsername] = useState("");
+  const [avatarJson, setAvatarJson] = useState<string | null>(null);
 
   const token = params.token as string;
-  const roomId = params.roomId as string;
+  // const roomId = params.roomId as string;
 
   useEffect(() => {
     const handleJoinSuccess = (payload: JoinSuccessPayload) => {
@@ -51,11 +52,7 @@ export default function Username() {
       <View style={styles.container}>
         <View style={styles.inner}>
           <View style={styles.topContainer}>
-            <Image
-              source={require("@/assets/images/welcome.png")}
-              style={styles.image}
-              accessibilityLabel="Bienvenue"
-            />
+            <AvatarGenerator onExportJSON={(json) => setAvatarJson(json)} />
             <View style={styles.formContainer}>
               <TextField
                 value={username}
@@ -66,7 +63,9 @@ export default function Username() {
               />
               <PrimaryButton
                 title="Envoyer"
-                onPress={() => emit("lobby:join", { token, username })}
+                onPress={() =>
+                  emit("lobby:join", { token, username, avatar: avatarJson })
+                }
                 disabled={!canSend}
               />
             </View>
@@ -78,7 +77,7 @@ export default function Username() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, marginBottom: 48 },
   inner: { flex: 1, justifyContent: "space-between" },
   topContainer: {
     flex: 1,
