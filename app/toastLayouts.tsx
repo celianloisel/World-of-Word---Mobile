@@ -5,9 +5,9 @@ export const successToastConfig = (props: any) => (
   <SuccessToast
     {...props}
     style={{
-      borderLeftColor: COLORS.success,
+      borderLeftColor: COLORS.funGreen,
       borderLeftWidth: 6,
-      backgroundColor: COLORS.backgroundAlt,
+      backgroundColor: COLORS.backgroundStrong,
       marginTop: 16,
       borderRadius: 12,
       shadowColor: "#000",
@@ -20,7 +20,7 @@ export const successToastConfig = (props: any) => (
     text1Style={{
       fontSize: 16,
       fontWeight: "700",
-      color: COLORS.funPink,
+      color: COLORS.funPinkDark,
     }}
     text2Style={{
       fontSize: 14,
@@ -35,9 +35,9 @@ export const errorToastConfig = (props: any) => (
   <ErrorToast
     {...props}
     style={{
-      borderLeftColor: COLORS.error,
+      borderLeftColor: COLORS.errorDark,
       borderLeftWidth: 6,
-      backgroundColor: COLORS.backgroundAlt,
+      backgroundColor: COLORS.backgroundStrong,
       marginTop: 16,
       borderRadius: 12,
       shadowColor: "#000",
@@ -50,7 +50,7 @@ export const errorToastConfig = (props: any) => (
     text1Style={{
       fontSize: 16,
       fontWeight: "700",
-      color: COLORS.errorDark,
+      color: COLORS.funPinkDark,
     }}
     text2Style={{
       fontSize: 14,
