@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { RoundedPrimaryButton } from "@/components/RoundedPrimaryButton";
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const router = useRouter();
@@ -34,6 +35,17 @@ export default function Index() {
           <RoundedPrimaryButton
             onPress={() => router.push("/qr-scan")}
             title="Jouer !"
+          />
+          <View style={{ height: 12 }} />
+          <RoundedPrimaryButton
+            onPress={() =>
+              Toast.show({
+                type: "success",
+                text1: "Succès",
+                text2: "Ceci est une notification de test",
+              })
+            }
+            title="Tester notification"
           />
         </View>
       </View>
