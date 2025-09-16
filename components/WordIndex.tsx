@@ -12,38 +12,21 @@ import { COLORS } from "@/constants/colors";
 
 type Props = {
   disabled?: boolean;
+  words?: string[];
 };
 
-const WORDS = [
-  "Chat",
-  "Chien",
-  "Maison",
-  "Voiture",
-  "Soleil",
-  "Lune",
-  "Arbre",
-  "Mer",
-  "Montagne",
-  "Neige",
-  "Livre",
-  "Musique",
-  "Pomme",
-  "Étoile",
-  "Amour",
-];
-
-export function WordIndex({ disabled = false }: Props) {
+export function WordIndex({ disabled = false, words = [] }: Props) {
   const [isModalVisible, setModalVisible] = useState(false);
-
   const toggleModal = () => setModalVisible((v) => !v);
+  const isEmpty = words.length === 0;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View>
       <TouchableOpacity
-        style={[styles.button, disabled && styles.disabled]}
+        style={[styles.button, (disabled || isEmpty) && styles.disabled]}
         onPress={toggleModal}
         activeOpacity={0.7}
-        disabled={disabled}
+        disabled={disabled || isEmpty}
       >
         <FontAwesome5 name="book-open" size={24} color="#fff" />
       </TouchableOpacity>
@@ -56,38 +39,42 @@ export function WordIndex({ disabled = false }: Props) {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {/* FlatList en 2 colonnes */}
-            <FlatList
-              data={WORDS}
-              keyExtractor={(item, index) => `${item}-${index}`}
-              numColumns={2}
-              columnWrapperStyle={styles.columnWrapper}
-              contentContainerStyle={styles.wordList}
-              style={{ flex: 1, width: "100%" }}
-              renderItem={({ item }) => (
-                <View style={styles.wordItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.wordText}>{item}</Text>
-                </View>
-              )}
-            />
+            {isEmpty ? (
+              <View style={styles.emptyWrap}>
+                <Text style={styles.emptyText}>En attente de mots…</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={words}
+                keyExtractor={(item, index) => `${item}-${index}`}
+                numColumns={2}
+                columnWrapperStyle={styles.columnWrapper}
+                contentContainerStyle={styles.wordList}
+                style={{ flex: 1, width: "100%" }}
+                renderItem={({ item }) => (
+                  <View style={styles.wordItem}>
+                    <Text style={styles.bullet}>•</Text>
+                    <Text style={styles.wordText}>{item}</Text>
+                  </View>
+                )}
+              />
+            )}
 
-            {/* boutons alignés */}
             <View style={styles.buttonsRow}>
               <TouchableOpacity
-                style={[styles.moreButton, disabled && styles.disabled]}
-                onPress={() => {
-                  /* action voir plus */
-                }}
-                disabled={disabled}
+                style={[
+                  styles.moreButton,
+                  (disabled || isEmpty) && styles.disabled,
+                ]}
+                onPress={() => {}}
+                disabled={disabled || isEmpty}
               >
                 <Text style={styles.modalButtonText}>Voir plus</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.closeButton, disabled && styles.disabled]}
+                style={styles.closeButton}
                 onPress={toggleModal}
-                disabled={disabled}
               >
                 <Text style={styles.modalButtonText}>Fermer</Text>
               </TouchableOpacity>
@@ -116,49 +103,34 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.6 },
 
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  // boîte centrée et non pleine largeur (important pour numColumns)
   modalContent: {
     backgroundColor: COLORS.funPink,
     padding: 18,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "flex-start",
-    width: "90%", // <- important : ne pas laisser 100% si tu veux 2 colonnes visibles
+    width: "90%",
     height: "70%",
   },
 
-  wordList: {
-    paddingVertical: 8,
-  },
+  wordList: { paddingVertical: 8 },
+  columnWrapper: { justifyContent: "space-between", paddingHorizontal: 6 },
 
-  // gère l'espacement horizontal entre les 2 colonnes
-  columnWrapper: {
-    justifyContent: "space-between",
-    paddingHorizontal: 6,
-  },
-
-  // chaque item ~48% de la largeur du parent (permet 2 colonnes)
   wordItem: {
     width: "48%",
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
-  bullet: {
-    color: "#fff",
-    fontSize: 18,
-    marginRight: 8,
-  },
+  bullet: { color: "#fff", fontSize: 18, marginRight: 8 },
   wordText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
+    flexShrink: 1, // <- empêche le débordement
+    flexWrap: "wrap", // <- permet de passer à la ligne
   },
 
   buttonsRow: {
@@ -186,4 +158,6 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   modalButtonText: { color: "#fff", fontWeight: "bold" },
+  emptyText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
 });

@@ -1,39 +1,7 @@
-import { Stack, useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { Stack } from "expo-router";
 import { ImageBackground, StyleSheet, View } from "react-native";
-import { SocketProvider, useSocket } from "@/contexts/socketContext";
-import Toast from "react-native-toast-message";
-import { toastConfig } from "@/app/toastLayouts";
-
-function RootBoundary() {
-  const router = useRouter();
-  const { on, off, connected, isInLobby } = useSocket();
-
-  useEffect(() => {
-    const toHome = (reason: string) => {
-      if (isInLobby) {
-        router.replace({ pathname: "/", params: { reason } });
-      }
-    };
-    const handleDisconnect = () => toHome("socket_disconnected");
-    const handleConnectError = () => toHome("connect_error");
-
-    on("disconnect", handleDisconnect);
-    on("connect_error", handleConnectError);
-    return () => {
-      off("disconnect", handleDisconnect);
-      off("connect_error", handleConnectError);
-    };
-  }, [on, off, router, isInLobby]);
-
-  useEffect(() => {
-    if (!connected && isInLobby) {
-      router.replace({ pathname: "/", params: { reason: "offline" } });
-    }
-  }, [connected, isInLobby, router]);
-
-  return null;
-}
+import { SocketProvider } from "@/contexts/socketContext";
+import { GameProvider } from "@/contexts/gameContext";
 
 export default function RootLayout() {
   if (!process.env.EXPO_PUBLIC_SERVER_URL) {
@@ -42,24 +10,23 @@ export default function RootLayout() {
 
   return (
     <SocketProvider url={process.env.EXPO_PUBLIC_SERVER_URL}>
-      <ImageBackground
-        source={require("@/assets/images/background.png")}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay} />
-        <View style={styles.wrapper}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "transparent" },
-            }}
-          />
-        </View>
-        <Toast config={toastConfig} />
-
-        <RootBoundary />
-      </ImageBackground>
+      <GameProvider>
+        <ImageBackground
+          source={require("@/assets/images/background.png")}
+          style={styles.background}
+          resizeMode="cover"
+        >
+          <View style={styles.overlay} />
+          <View style={styles.wrapper}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "transparent" },
+              }}
+            />
+          </View>
+        </ImageBackground>
+      </GameProvider>
     </SocketProvider>
   );
 }

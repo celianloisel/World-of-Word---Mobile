@@ -27,7 +27,7 @@ export default function QrScan() {
             try {
               const parsed = JSON.parse(raw);
               router.push({
-                pathname: "/words",
+                pathname: "/username",
                 params: {
                   roomId: parsed.qrPayload.roomId,
                   token: parsed.qrPayload.joinToken,
