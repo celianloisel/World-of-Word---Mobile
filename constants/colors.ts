@@ -60,4 +60,37 @@ export const COLORS = {
   funOrange: "#FF9248",
   funOrangeLight: "#FFBE85",
   funOrangeDark: "#C75B12",
+
+  overlayScrim: "rgba(38, 10, 51, 0.6)",
+  surface: "#FCF8FF",
+  surfaceMuted: "#F5EFFF",
+  surfaceElevated: "#F2E5FF",
+
+  accentViolet: "#B57BFF",
+  accentVioletDark: "#6B38C6",
+  accentFuchsia: "#FF7AD9",
+  accentFuchsiaDark: "#C23894",
+  accentTeal: "#21C1B6",
+  accentTealDark: "#0E8179",
+  accentLime: "#B7F000",
+  accentLimeDark: "#6E9C00",
+
+  neutralSoft: "#EDE7F6",
+  neutralMid: "#D7CCE8",
+  neutralStrong: "#B8A6D4",
+
+  focusRing: "#B57BFF",
+  hoverTint: "rgba(255, 111, 181, 0.08)",
+  pressTint: "rgba(194, 24, 91, 0.12)",
+
+  textOnSurface: "#1E0F2A",
+  textSubtle: "#6E5A7B",
+
+  shadowColorSoft: "rgba(32, 0, 48, 0.15)",
+  shadowColorStrong: "rgba(32, 0, 48, 0.28)",
+
+  gradientPrimaryFrom: "#9B2C92",
+  gradientPrimaryTo: "#D946EF",
+  gradientAccentFrom: "#6EC1E4",
+  gradientAccentTo: "#B57BFF",
 };

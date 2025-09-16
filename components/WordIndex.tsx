@@ -6,9 +6,11 @@ import {
   View,
   StyleSheet,
   FlatList,
+  ImageBackground,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { COLORS } from "@/constants/colors";
+import { BlurView } from "expo-blur";
 
 type Props = {
   disabled?: boolean;
@@ -28,7 +30,7 @@ export function WordIndex({ disabled = false, words = [] }: Props) {
         activeOpacity={0.7}
         disabled={disabled || isEmpty}
       >
-        <FontAwesome5 name="book-open" size={24} color="#fff" />
+        <FontAwesome5 name="book-open" size={24} color={COLORS.textOnPrimary} />
       </TouchableOpacity>
 
       <Modal
@@ -38,48 +40,49 @@ export function WordIndex({ disabled = false, words = [] }: Props) {
         hideModalContentWhileAnimating
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {isEmpty ? (
-              <View style={styles.emptyWrap}>
-                <Text style={styles.emptyText}>En attente de mots…</Text>
+          <ImageBackground
+            source={require("@/assets/images/background.png")}
+            resizeMode="cover"
+            style={styles.modalContent}
+            imageStyle={styles.modalImage}
+          >
+            <View style={styles.overlay} />
+            <View style={styles.panel}>
+              {isEmpty ? (
+                <View style={styles.emptyWrap}>
+                  <Text style={styles.emptyText}>En attente de mots…</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={words}
+                  keyExtractor={(item, index) => `${item}-${index}`}
+                  numColumns={2}
+                  columnWrapperStyle={styles.columnWrapper}
+                  contentContainerStyle={styles.wordList}
+                  style={{ flex: 1, width: "100%" }}
+                  renderItem={({ item }) => (
+                    <BlurView
+                      intensity={40}
+                      tint="light"
+                      style={styles.wordItem}
+                    >
+                      <Text style={styles.bullet}>•</Text>
+                      <Text style={styles.wordText}>{item}</Text>
+                    </BlurView>
+                  )}
+                />
+              )}
+
+              <View style={styles.buttonsRow}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={toggleModal}
+                >
+                  <Text style={styles.modalButtonText}>Fermer</Text>
+                </TouchableOpacity>
               </View>
-            ) : (
-              <FlatList
-                data={words}
-                keyExtractor={(item, index) => `${item}-${index}`}
-                numColumns={2}
-                columnWrapperStyle={styles.columnWrapper}
-                contentContainerStyle={styles.wordList}
-                style={{ flex: 1, width: "100%" }}
-                renderItem={({ item }) => (
-                  <View style={styles.wordItem}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.wordText}>{item}</Text>
-                  </View>
-                )}
-              />
-            )}
-
-            <View style={styles.buttonsRow}>
-              <TouchableOpacity
-                style={[
-                  styles.moreButton,
-                  (disabled || isEmpty) && styles.disabled,
-                ]}
-                onPress={() => {}}
-                disabled={disabled || isEmpty}
-              >
-                <Text style={styles.modalButtonText}>Voir plus</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={toggleModal}
-              >
-                <Text style={styles.modalButtonText}>Fermer</Text>
-              </TouchableOpacity>
             </View>
-          </View>
+          </ImageBackground>
         </View>
       </Modal>
     </View>
@@ -95,7 +98,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 32,
-    shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
@@ -106,13 +108,33 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   modalContent: {
-    backgroundColor: COLORS.funPink,
-    padding: 18,
-    borderRadius: 16,
+    padding: 0,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "flex-start",
     width: "90%",
     height: "70%",
+    overflow: "hidden",
+  },
+
+  modalImage: {
+    borderRadius: 20,
+    width: "100%",
+    height: "100%",
+  },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 20,
+  },
+
+  panel: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    borderRadius: 16,
+    padding: 18,
   },
 
   wordList: { paddingVertical: 8 },
@@ -123,41 +145,53 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    overflow: "hidden",
   },
-  bullet: { color: "#fff", fontSize: 18, marginRight: 8 },
+
+  bullet: {
+    color: "rgba(255,255,255,0.95)",
+    fontSize: 18,
+    marginRight: 8,
+    textShadowColor: "rgba(0,0,0,0.35)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
   wordText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    flexShrink: 1, // <- empêche le débordement
-    flexWrap: "wrap", // <- permet de passer à la ligne
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.98)",
+    flexShrink: 1,
+    flexWrap: "wrap",
+    textShadowColor: "rgba(0,0,0,0.35)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   buttonsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: "100%",
-    marginTop: 12,
+    marginTop: 16,
   },
   closeButton: {
-    backgroundColor: COLORS.funPinkLight,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    backgroundColor: COLORS.funPink,
+    paddingVertical: 14,
+    paddingHorizontal: 36,
     borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
-    width: "48%",
   },
-  moreButton: {
-    backgroundColor: COLORS.funPinkDark,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "48%",
+  modalButtonText: { color: COLORS.textOnPrimary, fontWeight: "bold" },
+  emptyText: {
+    color: "rgba(255,255,255,0.98)",
+    fontWeight: "700",
+    fontSize: 16,
+    textShadowColor: "rgba(0,0,0,0.35)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  modalButtonText: { color: "#fff", fontWeight: "bold" },
-  emptyText: { color: "#fff", fontWeight: "600", fontSize: 16 },
   emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
 });

@@ -11,7 +11,11 @@ const GameContext = createContext<GameContextType | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [words, setWords] = useState<string[]>([]);
+  const [words, _setWords] = useState<string[]>([]);
+
+  const setWords = (ws: string[]) => {
+    _setWords([...ws].sort((a, b) => a.localeCompare(b)));
+  };
 
   const value = useMemo(
     () => ({
