@@ -8,7 +8,7 @@ export function NotifDeclined(props: any) {
       type: "error",
       text1: "Demande refusée",
       text2: "Votre demande a été refusée ❌",
-      visibilityTime: 2000, // 2 secondes
+      visibilityTime: 2000,
     });
   };
 

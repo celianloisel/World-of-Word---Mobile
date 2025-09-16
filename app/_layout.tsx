@@ -2,6 +2,8 @@ import { Stack, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ImageBackground, StyleSheet, View } from "react-native";
 import { SocketProvider, useSocket } from "@/contexts/socketContext";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "@/app/toastLayouts";
 
 function RootBoundary() {
   const router = useRouter();
@@ -54,6 +56,7 @@ export default function RootLayout() {
             }}
           />
         </View>
+        <Toast config={toastConfig} />
 
         <RootBoundary />
       </ImageBackground>
