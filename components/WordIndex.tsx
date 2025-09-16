@@ -11,16 +11,19 @@ import {
 import { FontAwesome5 } from "@expo/vector-icons";
 import { COLORS } from "@/constants/colors";
 import { BlurView } from "expo-blur";
+import { Word } from "@/contexts/gameContext";
 
 type Props = {
   disabled?: boolean;
-  words?: string[];
+  words?: Word[];
 };
 
 export function WordIndex({ disabled = false, words = [] }: Props) {
   const [isModalVisible, setModalVisible] = useState(false);
   const toggleModal = () => setModalVisible((v) => !v);
-  const isEmpty = words.length === 0;
+
+  const wordTexts = (words ?? []).map((w) => w.text);
+  const isEmpty = wordTexts.length === 0;
 
   return (
     <View>
@@ -54,7 +57,7 @@ export function WordIndex({ disabled = false, words = [] }: Props) {
                 </View>
               ) : (
                 <FlatList
-                  data={words}
+                  data={wordTexts}
                   keyExtractor={(item, index) => `${item}-${index}`}
                   numColumns={2}
                   columnWrapperStyle={styles.columnWrapper}

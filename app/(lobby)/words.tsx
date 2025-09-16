@@ -14,15 +14,34 @@ import { WordIndex } from "@/components/WordIndex";
 import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { useSocket } from "@/contexts/socketContext";
+import { useLocalSearchParams } from "expo-router";
 
 export default function Words() {
   const { words } = useGame();
   const [input, setInput] = useState("");
+  const { emit } = useSocket();
+  const { platformId } = useLocalSearchParams() as { platformId?: string };
 
   const handleSend = useCallback(() => {
-    // TODO: implémenter l'envoi de mot ici
-    // (pour l'instant, fonction volontairement vide)
-  }, []);
+    const raw = input.trim();
+    if (!raw) return;
+
+    const lower = raw.toLocaleLowerCase("fr");
+    const found = words.find((w) => w.text.toLocaleLowerCase("fr") === lower);
+    const type = found?.type ?? "event:add";
+
+    const isPlatform = type === "event:add:platform";
+    const eventName = isPlatform ? "event:add:platform" : "event:add";
+
+    if (isPlatform) {
+      emit(eventName, { word: raw, platformId });
+    } else {
+      emit(eventName, { word: raw });
+    }
+
+    setInput("");
+  }, [emit, input, words, platformId]);
 
   const canSend = input.trim().length > 0;
 
@@ -42,7 +61,7 @@ export default function Words() {
           <View style={styles.inner}>
             <View style={styles.bottomContainer}>
               <View style={styles.indexButton}>
-                <WordIndex words={words} disabled={words.length === 0} />
+                <WordIndex words={words} />
               </View>
 
               <View style={styles.formContainer}>
