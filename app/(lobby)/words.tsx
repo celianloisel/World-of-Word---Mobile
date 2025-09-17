@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Text,
   View,
@@ -15,41 +15,68 @@ import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
-import { useLocalSearchParams } from "expo-router";
 
+const TYPE_LABELS: Record<string, string> = {
+  "event:add": "Général",
+  "event:add:platform": "Plateforme",
+};
+
+const isPlatformType = (t: string | null) => !!t && /(^|:)platform$/.test(t);
 export default function Words() {
   const { words } = useGame();
   const [input, setInput] = useState("");
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   const { emit } = useSocket();
-  const { platformId } = useLocalSearchParams() as { platformId?: string };
+
+  const lower = useMemo(() => input.trim().toLocaleLowerCase("fr"), [input]);
+
+  const found = useMemo(
+    () => words.find((w) => w.text.toLocaleLowerCase("fr") === lower),
+    [words, lower],
+  );
+
+  const foundTypes: string[] = found?.types ?? [];
+  const hasMultipleTypes = foundTypes.length > 1;
+
+  useEffect(() => {
+    setSelectedType(null);
+  }, [lower]);
+
+  const canSend =
+    input.trim().length > 0 && (!hasMultipleTypes || !!selectedType);
 
   const handleSend = useCallback(() => {
     const raw = input.trim();
     if (!raw) return;
+    if (found && foundTypes.length > 1 && !selectedType) return;
 
-    const lower = raw.toLocaleLowerCase("fr");
-    const found = words.find((w) => w.text.toLocaleLowerCase("fr") === lower);
-    const type = found?.type ?? "event:add";
+    const typeCandidate =
+      foundTypes.length === 1 ? foundTypes[0] : selectedType || "event:player";
 
-    const isPlatform = type === "event:add:platform";
-    const eventName = isPlatform ? "event:add:platform" : "event:add";
-
-    if (isPlatform) {
-      emit(eventName, { word: raw, platformId });
-    } else {
-      emit(eventName, { word: raw });
+    const platform = isPlatformType(typeCandidate);
+    const eventName = platform ? "event:add:platform" : "event:add";
+    const payload: any = {
+      word: raw,
+      type: platform ? "event:platform" : "event:player",
+    };
+    if (platform) {
+      payload.platform = "a25d";
     }
 
+    emit(eventName, payload);
     setInput("");
-  }, [emit, input, words, platformId]);
+    setSelectedType(null);
+  }, [emit, input, found, foundTypes, selectedType]);
 
-  const canSend = input.trim().length > 0;
+  const handleWordSearch = useCallback((text: string) => {
+    setInput(text);
+  }, []);
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      keyboardVerticalOffset={0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
@@ -64,10 +91,30 @@ export default function Words() {
                 <WordIndex words={words} />
               </View>
 
+              {hasMultipleTypes && (
+                <View style={styles.typeButtons}>
+                  {foundTypes.map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[
+                        styles.typeButton,
+                        selectedType === t && styles.typeButtonSelected,
+                      ]}
+                      onPress={() => setSelectedType(t)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.typeButtonText}>
+                        {TYPE_LABELS[t] ?? t}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
               <View style={styles.formContainer}>
                 <TextField
                   value={input}
-                  onChangeText={setInput}
+                  onChangeText={handleWordSearch}
                   placeholder="Entrez un mot"
                   autoCapitalize="none"
                   returnKeyType="done"
@@ -122,7 +169,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-
   roundButton: {
     width: 52,
     height: 52,
@@ -132,9 +178,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 8,
   },
-
   roundButtonDisabled: {
     backgroundColor: COLORS.funPinkLight,
     opacity: 0.6,
+  },
+  typeButtons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+  typeButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: COLORS.funPinkLight,
+    opacity: 0.9,
+  },
+  typeButtonSelected: {
+    backgroundColor: COLORS.funPink,
+    opacity: 1,
+  },
+  typeButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

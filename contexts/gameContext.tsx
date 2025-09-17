@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useMemo } from "react";
 
 export type Word = {
   text: string;
-  type?: string;
+  types: string[];
 };
 
 type IncomingWord =
@@ -10,7 +10,7 @@ type IncomingWord =
   | string
   | {
       word: string;
-      type?: string;
+      types: string[];
     };
 
 type GameContextType = {
@@ -23,10 +23,9 @@ type GameContextType = {
 const GameContext = createContext<GameContextType | null>(null);
 
 function normalizeWord(w: IncomingWord): Word {
-  if (typeof w === "string") return { text: w };
+  if (typeof w === "string") return { text: w, types: [] };
   if ("text" in w) return w as Word;
-  // format serveur: { word, type }
-  return { text: w.word, type: w.type };
+  return { text: w.word, types: w.types };
 }
 
 export function GameProvider({ children }: { children: React.ReactNode }) {

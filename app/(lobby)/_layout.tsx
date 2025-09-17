@@ -3,13 +3,17 @@ import { Slot, useLocalSearchParams } from "expo-router";
 import { useSocket } from "@/contexts/socketContext";
 
 export default function LobbyLayout() {
-  const { roomId } = useLocalSearchParams<{ roomId?: string }>();
-  const { setLobbyId } = useSocket();
+  const params = useLocalSearchParams<{ roomId?: string | string[] }>();
+  const roomId = Array.isArray(params.roomId)
+    ? params.roomId[0]
+    : params.roomId;
+
+  const socket = useSocket();
 
   useEffect(() => {
-    setLobbyId(roomId ?? "lobby");
-    return () => setLobbyId(null);
-  }, [roomId, setLobbyId]);
+    socket?.setLobbyId?.(roomId ?? "lobby");
+    return () => socket?.setLobbyId?.(null);
+  }, [roomId, socket]);
 
   return <Slot />;
 }

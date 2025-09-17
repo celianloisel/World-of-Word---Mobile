@@ -16,7 +16,7 @@ export default function RootLayout() {
           style={styles.background}
           resizeMode="cover"
         >
-          <View style={styles.overlay} />
+          <View style={styles.overlay} pointerEvents="none" />
           <View style={styles.wrapper}>
             <Stack
               screenOptions={{
