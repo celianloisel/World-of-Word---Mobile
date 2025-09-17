@@ -13,15 +13,16 @@ import { COLORS } from "@/constants/colors";
 import { WordIndex } from "@/components/WordIndex";
 import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
 
 const TYPE_LABELS: Record<string, string> = {
-  "event:add": "Général",
-  "event:add:platform": "Plateforme",
+  general: "Général",
+  platform: "Plateforme",
 };
 
 const isPlatformType = (t: string | null) => !!t && /(^|:)platform$/.test(t);
+
 export default function Words() {
   const { words } = useGame();
   const [input, setInput] = useState("");
@@ -37,6 +38,18 @@ export default function Words() {
 
   const foundTypes: string[] = found?.types ?? [];
   const hasMultipleTypes = foundTypes.length > 1;
+
+  const platformType = useMemo(
+    () => foundTypes.find((t) => isPlatformType(t)) ?? null,
+    [foundTypes],
+  );
+  const generalType = useMemo(
+    () => foundTypes.find((t) => !isPlatformType(t)) ?? null,
+    [foundTypes],
+  );
+
+  const platformEnabled = hasMultipleTypes && !!platformType;
+  const generalEnabled = hasMultipleTypes && !!generalType;
 
   useEffect(() => {
     setSelectedType(null);
@@ -74,44 +87,90 @@ export default function Words() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <View style={styles.scoreContainer}>
-            <Text style={styles.scoreText}>Score</Text>
-            <Text style={styles.scoreValue}>0</Text>
-          </View>
+          <View style={styles.hero} />
 
-          <View style={styles.inner}>
-            <View style={styles.bottomContainer}>
-              <View style={styles.indexButton}>
-                <WordIndex words={words} />
+          <View style={styles.panel}>
+            <View style={styles.headerRow}>
+              <View style={styles.scoreCard}>
+                <Text style={styles.scoreLabel}>Score</Text>
+                <Text style={styles.scoreValue}>0</Text>
               </View>
 
-              {hasMultipleTypes && (
-                <View style={styles.typeButtons}>
-                  {foundTypes.map((t) => (
-                    <TouchableOpacity
-                      key={t}
-                      style={[
-                        styles.typeButton,
-                        selectedType === t && styles.typeButtonSelected,
-                      ]}
-                      onPress={() => setSelectedType(t)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.typeButtonText}>
-                        {TYPE_LABELS[t] ?? t}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+              <View style={styles.indexButton}>
+                <WordIndex words={words}>
+                  <FontAwesome6 name="book-open" size={24} color="#fff" />
+                </WordIndex>
+              </View>
+            </View>
 
-              <View style={styles.formContainer}>
+            <View style={{ flex: 1 }} />
+
+            <View style={styles.typeRow}>
+              <TouchableOpacity
+                style={[
+                  styles.typePill,
+                  generalEnabled ? null : styles.typePillDisabled,
+                  selectedType && selectedType === generalType
+                    ? styles.typePillSelected
+                    : null,
+                ]}
+                onPress={() => {
+                  if (!generalEnabled || !generalType) return;
+                  setSelectedType(generalType);
+                }}
+                activeOpacity={0.7}
+                disabled={!generalEnabled}
+              >
+                <Text
+                  style={[
+                    styles.typePillText,
+                    generalEnabled ? null : styles.typePillTextDisabled,
+                    selectedType && selectedType === generalType
+                      ? styles.typePillTextSelected
+                      : null,
+                  ]}
+                >
+                  {TYPE_LABELS.general}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.typePill,
+                  platformEnabled ? null : styles.typePillDisabled,
+                  selectedType && selectedType === platformType
+                    ? styles.typePillSelected
+                    : null,
+                ]}
+                onPress={() => {
+                  if (!platformEnabled || !platformType) return;
+                  setSelectedType(platformType);
+                }}
+                activeOpacity={0.7}
+                disabled={!platformEnabled}
+              >
+                <Text
+                  style={[
+                    styles.typePillText,
+                    platformEnabled ? null : styles.typePillTextDisabled,
+                    selectedType && selectedType === platformType
+                      ? styles.typePillTextSelected
+                      : null,
+                  ]}
+                >
+                  {TYPE_LABELS.platform}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formRow}>
+              <View style={styles.inputWrapper}>
                 <TextField
                   value={input}
                   onChangeText={handleWordSearch}
@@ -120,18 +179,15 @@ export default function Words() {
                   returnKeyType="done"
                   onSubmitEditing={handleSend}
                 />
-                <TouchableOpacity
-                  style={[
-                    styles.roundButton,
-                    !canSend && styles.roundButtonDisabled,
-                  ]}
-                  onPress={handleSend}
-                  disabled={!canSend}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome5 name="paper-plane" size={20} color="#fff" />
-                </TouchableOpacity>
               </View>
+              <TouchableOpacity
+                style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
+                onPress={handleSend}
+                disabled={!canSend}
+                activeOpacity={0.7}
+              >
+                <FontAwesome5 name="paper-plane" size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -142,34 +198,94 @@ export default function Words() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  inner: {
+
+  hero: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: "#FFFFFF",
+    flexShrink: 0,
+  },
+
+  panel: {
     flex: 1,
-    justifyContent: "space-between",
-    padding: 24,
   },
-  scoreContainer: { marginTop: 120, alignItems: "center", paddingVertical: 24 },
-  scoreText: { fontSize: 32, fontWeight: "600", color: COLORS.funPink },
-  scoreValue: {
-    fontSize: 64,
-    fontWeight: "800",
-    color: COLORS.funPinkLight,
-    marginTop: 8,
-  },
-  bottomContainer: {
-    width: "85%",
-    position: "absolute",
-    bottom: 0,
-    left: 15,
-    right: 15,
-    gap: 12,
-  },
-  indexButton: { alignItems: "flex-end" },
-  formContainer: {
+
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "space-between",
+    flexWrap: "wrap",
   },
-  roundButton: {
+  scoreCard: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.funPink,
+  },
+  scoreValue: {
+    fontSize: 36,
+    fontWeight: "800",
+    color: COLORS.funPinkLight,
+    marginTop: 2,
+    lineHeight: 40,
+  },
+  indexButton: {
+    alignItems: "flex-end",
+  },
+
+  typeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  typePill: {
+    flexBasis: "48%",
+    maxWidth: "48%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: COLORS.funPinkLight,
+    marginBottom: 8,
+  },
+  typePillSelected: {
+    backgroundColor: COLORS.funPink,
+    borderColor: COLORS.funPink,
+  },
+  typePillDisabled: {
+    backgroundColor: "#F0F1F5",
+    borderColor: "#E3E5EC",
+    opacity: 0.4,
+  },
+  typePillText: {
+    fontWeight: "700",
+    color: COLORS.funPink,
+  },
+  typePillTextSelected: {
+    color: "#fff",
+  },
+  typePillTextDisabled: {
+    color: "#9AA0A6",
+  },
+
+  formRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  inputWrapper: {
+    flex: 1,
+  },
+  sendBtn: {
     width: 52,
     height: 52,
     borderRadius: 26,
@@ -178,30 +294,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 8,
   },
-  roundButtonDisabled: {
+  sendBtnDisabled: {
     backgroundColor: COLORS.funPinkLight,
-    opacity: 0.6,
-  },
-  typeButtons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-    marginBottom: 12,
-    flexWrap: "wrap",
-  },
-  typeButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: COLORS.funPinkLight,
-    opacity: 0.9,
-  },
-  typeButtonSelected: {
-    backgroundColor: COLORS.funPink,
-    opacity: 1,
-  },
-  typeButtonText: {
-    color: "#fff",
-    fontWeight: "600",
+    opacity: 0.4,
   },
 });

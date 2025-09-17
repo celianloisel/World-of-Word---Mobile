@@ -8,7 +8,7 @@ import {
   FlatList,
   ImageBackground,
 } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome6 } from "@expo/vector-icons"; // 👈 FA6
 import { COLORS } from "@/constants/colors";
 import { BlurView } from "expo-blur";
 import { Word } from "@/contexts/gameContext";
@@ -16,9 +16,10 @@ import { Word } from "@/contexts/gameContext";
 type Props = {
   disabled?: boolean;
   words?: Word[];
+  children?: React.ReactNode; // permet d'injecter une icône custom depuis le parent
 };
 
-export function WordIndex({ disabled = false, words = [] }: Props) {
+export function WordIndex({ disabled = false, words = [], children }: Props) {
   const [isModalVisible, setModalVisible] = useState(false);
   const toggleModal = () => setModalVisible((v) => !v);
 
@@ -33,7 +34,14 @@ export function WordIndex({ disabled = false, words = [] }: Props) {
         activeOpacity={0.7}
         disabled={disabled || isEmpty}
       >
-        <FontAwesome5 name="book-open" size={24} color={COLORS.textOnPrimary} />
+        <View style={styles.iconWrap}>
+          {/* Icône injectée par le parent OU fallback fiable */}
+          {children ?? <FontAwesome6 name="book" size={24} color="#fff" />}
+          {/* Fallback ultime si jamais la font ne se charge pas */}
+          <Text style={styles.emojiFallback} accessible={false}>
+            📖
+          </Text>
+        </View>
       </TouchableOpacity>
 
       <Modal
@@ -106,10 +114,21 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: "40%",
   },
+  iconWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 24,
+    minWidth: 24,
+  },
+  // petit fallback emoji positionné derrière (n'apparaît que si l'icône vectorielle ne se rend pas)
+  emojiFallback: {
+    position: "absolute",
+    opacity: 0.0001, // quasi invisible, mais présent si la font FA ne charge pas
+    fontSize: 18,
+  },
   disabled: { opacity: 0.6 },
 
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   modalContent: {
     padding: 0,
     borderRadius: 20,
@@ -119,19 +138,12 @@ const styles = StyleSheet.create({
     height: "70%",
     overflow: "hidden",
   },
-
-  modalImage: {
-    borderRadius: 20,
-    width: "100%",
-    height: "100%",
-  },
-
+  modalImage: { borderRadius: 20, width: "100%", height: "100%" },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.35)",
     borderRadius: 20,
   },
-
   panel: {
     flex: 1,
     width: "100%",
@@ -142,7 +154,6 @@ const styles = StyleSheet.create({
 
   wordList: { paddingVertical: 8 },
   columnWrapper: { justifyContent: "space-between", paddingHorizontal: 6 },
-
   wordItem: {
     width: "48%",
     flexDirection: "row",
