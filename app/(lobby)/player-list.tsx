@@ -56,7 +56,7 @@ export default function PlayerList() {
     };
 
     const handleGameWords = (payload: GameWordsPayload) => {
-      if (payload?.wordTypes?.length) {
+      if (payload.wordTypes !== undefined && payload.wordTypes.length) {
         setWords(payload.wordTypes);
       } else if (payload?.words?.length) {
         setWords(payload.words);

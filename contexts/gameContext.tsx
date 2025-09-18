@@ -17,7 +17,9 @@ type GameContextType = {
   roomId: string | null;
   setRoomId: (id: string | null) => void;
   words: Word[];
-  setWords: (words: IncomingWord[]) => void;
+  setWords: (
+    words: (Word | string | { word: string; type?: string })[],
+  ) => void;
 };
 
 const GameContext = createContext<GameContextType | null>(null);
