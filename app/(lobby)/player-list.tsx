@@ -6,11 +6,12 @@ import { useGame, Word } from "@/contexts/gameContext";
 import { COLORS } from "@/constants/colors";
 import PlayerCard from "@/components/PlayerCard";
 
-type Player = { username: string; socketId: string };
+type Player = { username: string; socketId: string; avatar: string };
 type PlayerJoinedPayload = {
   roomId: string;
   username: string;
   socketId: string;
+  avatar: string;
 };
 type GameStartPayload = { roomId?: string };
 
@@ -32,12 +33,17 @@ export default function PlayerList() {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
   useEffect(() => {
+    console.log(players);
     const handlePlayerJoined = (payload: PlayerJoinedPayload) => {
       setPlayers((prev) => {
         if (prev.some((p) => p.socketId === payload.socketId)) return prev;
         return [
           ...prev,
-          { username: payload.username, socketId: payload.socketId },
+          {
+            username: payload.username,
+            socketId: payload.socketId,
+            avatar: payload.avatar,
+          },
         ];
       });
     };
@@ -85,7 +91,11 @@ export default function PlayerList() {
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item, index }) => (
-          <PlayerCard username={item.username} index={index} />
+          <PlayerCard
+            username={item.username}
+            index={index}
+            avatar={item.avatar}
+          />
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>En attente de joueurs…</Text>

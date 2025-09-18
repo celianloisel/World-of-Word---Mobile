@@ -1,13 +1,15 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { COLORS } from "@/constants/colors";
+import Avatar from "@zamplyy/react-native-nice-avatar";
 
 type Props = {
   username: string;
   index: number;
+  avatar: string;
 };
 
-export default function PlayerCard({ username, index }: Props) {
+export default function PlayerCard({ username, index, avatar }: Props) {
   const avatarPalette = useMemo(
     () => [
       COLORS.funPink,
@@ -21,6 +23,14 @@ export default function PlayerCard({ username, index }: Props) {
     [],
   );
 
+  let avatarConfig
+  try{
+    avatarConfig = JSON.parse(avatar);
+  } catch {
+    avatarConfig = null;
+  }
+  
+  
   const initials =
     username
       ?.trim()
@@ -32,9 +42,13 @@ export default function PlayerCard({ username, index }: Props) {
 
   return (
     <View style={styles.card}>
-      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-        <Text style={styles.avatarText}>{initials}</Text>
-      </View>
+      {avatarConfig ? (
+        <Avatar size={48} {...avatarConfig} /> // ✅ show real avatar
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+          <Text style={styles.avatarText}>{initials}</Text>
+        </View>
+      )}
       <Text style={styles.name}>{username}</Text>
     </View>
   );

@@ -1,5 +1,11 @@
 import Avatar, { genConfig } from "@zamplyy/react-native-nice-avatar";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { View, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -154,6 +160,11 @@ export default function AvatarGenerator({
       return { ...prev, hairStyle: next };
     });
   }, [hairStyles]);
+
+  useEffect(() => {
+    const json = JSON.stringify(config, null, 2);
+    onExportJSON?.(json, config);
+  }, [config, onExportJSON]);
 
   return (
     <View style={styles.container}>
