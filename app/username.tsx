@@ -14,7 +14,7 @@ import AvatarGenerator from "@/components/Avatar";
 import Toast from "react-native-toast-message";
 import BackButton from "@/components/BackButton";
 
-type Player = { username: string; socketId: string };
+type Player = { username: string; socketId: string; avatar: string };
 type JoinSuccessPayload = {
   roomId: string;
   username: string;
@@ -89,7 +89,6 @@ export default function Username() {
           <View style={styles.topContainer}>
             <AvatarGenerator
               onExportJSON={(json) => {
-                console.log("Avatar JSON:", json);
                 setAvatarJson(json);
               }}
             />

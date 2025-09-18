@@ -1,63 +1,54 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Avatar from "@zamplyy/react-native-nice-avatar";
 import { COLORS } from "@/constants/colors";
 
 type Props = {
   username: string;
-  index: number;
+  index?: number;
+  avatarConfig?: Record<string, unknown>;
 };
 
-export default function PlayerCard({ username, index }: Props) {
-  const avatarPalette = useMemo(
-    () => [
-      COLORS.funPink,
-      COLORS.funBlue,
-      COLORS.funGreen,
-      COLORS.funOrange,
-      COLORS.funYellow,
-      COLORS.tertiary,
-      COLORS.secondary,
-    ],
-    [],
-  );
-
-  const initials =
-    username
-      ?.trim()
-      ?.split(/\s+/)
-      .map((w) => w[0]?.toUpperCase())
-      .slice(0, 2)
-      .join("") || "?";
-  const avatarBg = avatarPalette[index % avatarPalette.length];
-
+export default function PlayerCard({ username, index, avatarConfig }: Props) {
   return (
     <View style={styles.card}>
-      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-        <Text style={styles.avatarText}>{initials}</Text>
+      <View style={styles.left}>
+        {avatarConfig ? (
+          <Avatar size={44} {...avatarConfig} />
+        ) : (
+          <View style={styles.fallback}>
+            <Text style={styles.fallbackText}>
+              {username?.trim()?.[0]?.toUpperCase() ?? "?"}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.name}>{username}</Text>
       </View>
-      <Text style={styles.name}>{username}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.backgroundMuted,
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: "#E6E8EF",
+    justifyContent: "space-between",
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  left: { flexDirection: "row", alignItems: "center", gap: 10 },
+  name: { fontSize: 16, fontWeight: "700", color: COLORS.text },
+  rank: { fontSize: 14, fontWeight: "700", color: COLORS.textLight },
+  fallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: COLORS.funPinkLight,
   },
-  avatarText: { color: COLORS.textOnPrimary, fontWeight: "800", fontSize: 16 },
-  name: { color: COLORS.text, fontSize: 16, fontWeight: "700" },
+  fallbackText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 });

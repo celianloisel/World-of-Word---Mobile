@@ -77,7 +77,6 @@ export default function AvatarGenerator({
         Alert.alert("Avatar JSON", json);
       } catch {
         // Fallback to console if Alert is unavailable
-        console.log("Avatar JSON:", json);
       }
     }
   }, [config, onExportJSON]);

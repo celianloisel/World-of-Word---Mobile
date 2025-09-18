@@ -5,13 +5,33 @@ import { useSocket } from "@/contexts/socketContext";
 import { useGame, Word } from "@/contexts/gameContext";
 import { COLORS } from "@/constants/colors";
 import PlayerCard from "@/components/PlayerCard";
+import { AvatarConfig } from "@zamplyy/react-native-nice-avatar";
 
-type Player = { username: string; socketId: string };
+type Player = {
+  username: string;
+  socketId: string;
+  avatar?: string | AvatarConfig;
+};
 type PlayerJoinedPayload = {
   roomId: string;
   username: string;
   socketId: string;
+  avatar?: string | AvatarConfig;
 };
+
+const coerceAvatar = (raw?: unknown) => {
+  if (!raw) return undefined;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof raw === "object") return raw as Record<string, unknown>;
+  return undefined;
+};
+
 type GameStartPayload = { roomId?: string };
 
 type GameWordsPayload = {
@@ -37,7 +57,11 @@ export default function PlayerList() {
         if (prev.some((p) => p.socketId === payload.socketId)) return prev;
         return [
           ...prev,
-          { username: payload.username, socketId: payload.socketId },
+          {
+            username: payload.username,
+            socketId: payload.socketId,
+            avatar: payload.avatar, // on stocke brut; on coerce à l'affichage
+          },
         ];
       });
     };
@@ -85,7 +109,11 @@ export default function PlayerList() {
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item, index }) => (
-          <PlayerCard username={item.username} index={index} />
+          <PlayerCard
+            username={item.username}
+            index={index}
+            avatarConfig={coerceAvatar(item.avatar)} // ✅ gère string + objet
+          />
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>En attente de joueurs…</Text>
