@@ -161,8 +161,17 @@ export default function Words() {
       setHistory(next.slice(0, 6));
     };
 
+    const handleRestart = () => {
+      setHistory([]);
+      setPlatforms([]);
+    };
+
     on("game:word:notify", handleWordNotify);
-    return () => off("game:word:notify", handleWordNotify);
+    on("game:restart:notify", handleRestart);
+    return () => {
+      off("game:word:notify", handleWordNotify);
+      off("game:restart:notify", handleRestart);
+    };
   }, [on, off]);
 
   const unitToPxX = useCallback(
