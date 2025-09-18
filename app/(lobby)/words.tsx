@@ -17,6 +17,7 @@ import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
+import Toast from "react-native-toast-message";
 
 const TYPE_LABELS: Record<string, string> = {
   general: "Général",
@@ -133,6 +134,42 @@ export default function Words() {
 
     return out;
   }, [groupedById]);
+
+  useEffect(() => {
+    if (!on || !off) return;
+
+    const handleSuccess = (payload?: { roomId?: string; message?: string }) => {
+      Toast.show({
+        type: "success",
+        text1: "Mot envoyé",
+        text2: "Le mot a bien été envoyé",
+        visibilityTime: 2000,
+      });
+      setInput("");
+      setSelectedGroup(null);
+      setSelectedType(null);
+    };
+
+    const handleError = (payload?: {
+      code?: string | number;
+      message?: string;
+    }) => {
+      Toast.show({
+        type: "error",
+        text1: payload?.code ? `Erreur ${payload.code}` : "Erreur",
+        text2: payload?.message ?? "Une erreur est survenue.",
+        visibilityTime: 2500,
+      });
+    };
+
+    on("event:success", handleSuccess);
+    on("event:error", handleError);
+
+    return () => {
+      off("event:success", handleSuccess);
+      off("event:error", handleError);
+    };
+  }, [on, off]);
 
   useEffect(() => {
     if (!on || !off) return;

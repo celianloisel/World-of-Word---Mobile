@@ -35,6 +35,13 @@ export default function Username() {
 
   useEffect(() => {
     const handleJoinSuccess = (payload: JoinSuccessPayload) => {
+      Toast.show({
+        type: "success",
+        text1: "Connexion réussie",
+        text2: `Bienvenue ${payload.username} dans le lobby !`,
+        visibilityTime: 2000,
+      });
+
       router.push({
         pathname: "/player-list",
         params: {
@@ -44,8 +51,26 @@ export default function Username() {
       });
     };
 
+    const handleJoinError = (payload?: {
+      code?: string | number;
+      message?: string;
+    }) => {
+      Toast.show({
+        type: "error",
+        text1: payload?.code ? `Erreur ${payload.code}` : "Connexion refusée",
+        text2: payload?.message ?? "Impossible de rejoindre le lobby",
+        visibilityTime: 2500,
+      });
+      setSubmitting(false); // libère le bouton
+    };
+
     on("lobby:join:success", handleJoinSuccess);
-    return () => off("lobby:join:success", handleJoinSuccess);
+    on("lobby:join:error", handleJoinError);
+
+    return () => {
+      off("lobby:join:success", handleJoinSuccess);
+      off("lobby:join:error", handleJoinError);
+    };
   }, [on, off, router]);
 
   const canSend =

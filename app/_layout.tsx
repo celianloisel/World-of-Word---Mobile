@@ -13,6 +13,7 @@ export default function RootLayout() {
   return (
     <SocketProvider url={process.env.EXPO_PUBLIC_SERVER_URL}>
       <GameProvider>
+        <Toast config={toastConfig} />
         <ImageBackground
           source={require("@/assets/images/background.png")}
           style={styles.background}
