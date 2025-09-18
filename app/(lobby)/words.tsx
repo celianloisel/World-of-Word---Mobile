@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   LayoutChangeEvent,
   Pressable,
+  FlatList,
 } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { WordIndex } from "@/components/WordIndex";
@@ -18,6 +19,7 @@ import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
 import Toast from "react-native-toast-message";
+import Avatar from "@zamplyy/react-native-nice-avatar";
 
 const TYPE_LABELS: Record<string, string> = {
   general: "Général",
@@ -27,6 +29,85 @@ const TYPE_LABELS: Record<string, string> = {
 const isPlatformType = (t: string | null) => !!t && /(^|:)platform$/.test(t);
 
 type PlatformItem = { id: string; x: number; y: number; width: number };
+
+type HistoryItem = {
+  id: string;
+  word: string;
+  username: string;
+  date: string;
+  avatar?: string | Record<string, unknown>;
+};
+
+const ALLOWED_AVATAR_KEYS = new Set([
+  "sex",
+  "faceColor",
+  "earSize",
+  "eyeStyle",
+  "noseStyle",
+  "mouthStyle",
+  "shirtStyle",
+  "glassesStyle",
+  "hairColor",
+  "hairStyle",
+  "hatStyle",
+  "hatColor",
+  "eyeBrowStyle",
+  "shirtColor",
+  "bgColor",
+]);
+
+const parseAvatar = (raw?: string | Record<string, unknown>) => {
+  if (!raw) return undefined;
+  let obj: any = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return undefined;
+    }
+  }
+  const clean: Record<string, unknown> = {};
+  Object.keys(obj).forEach((k) => {
+    if (ALLOWED_AVATAR_KEYS.has(k)) clean[k] = (obj as any)[k];
+  });
+  return clean;
+};
+
+const coerceAvatarConfig = (raw?: string | Record<string, unknown>) => {
+  if (!raw) return undefined;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return undefined;
+    }
+  }
+  return raw as Record<string, unknown>;
+};
+
+const AvatarBubble = ({
+  avatar,
+  username,
+  size = 36,
+}: {
+  avatar?: string | Record<string, unknown>;
+  username: string;
+  size?: number;
+}) => {
+  const cfg = parseAvatar(avatar);
+  if (cfg) return <Avatar size={size} {...cfg} />;
+  const initial = username?.trim()?.[0]?.toUpperCase() ?? "?";
+  return (
+    <View
+      style={[
+        styles.fallbackAvatar,
+        { width: size, height: size, borderRadius: size / 2 },
+      ]}
+    >
+      <Text style={styles.fallbackAvatarText}>{initial}</Text>
+    </View>
+  );
+};
 
 export default function Words() {
   const VIEW_WIDTH_UNITS = 100;
@@ -50,6 +131,39 @@ export default function Words() {
     w: 0,
     h: 0,
   });
+
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  useEffect(() => {
+    if (!on || !off) return;
+
+    const handleWordNotify = (
+      payload:
+        | { word: string; username: string; date: string; avatar?: any }
+        | Array<{ word: string; username: string; date: string; avatar?: any }>,
+    ) => {
+      const items = Array.isArray(payload) ? payload : [payload];
+
+      const next: HistoryItem[] = items.map((p) => ({
+        id:
+          `${p.username}-${p.word}-${p.date}-` +
+          Math.random().toString(36).slice(2),
+        word: p.word,
+        username: p.username,
+        date: p.date,
+        avatar: p.avatar,
+      }));
+
+      next.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+
+      setHistory(next.slice(0, 6));
+    };
+
+    on("game:word:notify", handleWordNotify);
+    return () => off("game:word:notify", handleWordNotify);
+  }, [on, off]);
 
   const unitToPxX = useCallback(
     (xUnit: number, totalW: number) => {
@@ -138,7 +252,7 @@ export default function Words() {
   useEffect(() => {
     if (!on || !off) return;
 
-    const handleSuccess = (payload?: { roomId?: string; message?: string }) => {
+    const handleSuccess = () => {
       Toast.show({
         type: "success",
         text1: "Mot envoyé",
@@ -233,7 +347,9 @@ export default function Words() {
   }, [lower]);
 
   const canSend =
-    input.trim().length > 0 && (!hasMultipleTypes || !!selectedType);
+    input.trim().length > 0 &&
+    (!hasMultipleTypes || !!selectedType) &&
+    (!(selectedType && isPlatformType(selectedType)) || !!selectedGroup);
 
   const handleSend = useCallback(() => {
     const raw = input.trim();
@@ -242,28 +358,23 @@ export default function Words() {
 
     const typeCandidate =
       foundTypes.length === 1 ? foundTypes[0] : selectedType || "event:player";
-    const platform = isPlatformType(typeCandidate);
+    const isPlat = isPlatformType(typeCandidate);
 
-    if (platform && !selectedGroup) {
-      console.log("❌ Vous devez sélectionner une plateforme avant d'envoyer.");
+    if (isPlat && !selectedGroup) {
+      console.log("❌ Sélectionne une plateforme avant d'envoyer.");
       return;
     }
 
-    const eventName = platform ? "event:add:platform" : "event:add";
+    const eventName = isPlat ? "event:add:platform" : "event:add";
     const payload: any = {
       word: raw,
-      type: platform ? "event:platform" : "event:player",
+      type: isPlat ? "event:platform" : "event:player",
     };
 
-    if (platform) {
-      payload.platform = selectedGroup;
-    }
+    if (isPlat) payload.platform = selectedGroup;
 
     emit(eventName, payload);
     console.log("✅ Mot envoyé :", payload);
-
-    setInput("");
-    setSelectedType(null);
   }, [emit, input, found, foundTypes, selectedType, selectedGroup]);
 
   const handleWordSearch = useCallback((text: string) => setInput(text), []);
@@ -298,6 +409,7 @@ export default function Words() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
+          {/* Zone de jeu */}
           <View style={styles.hero} onLayout={onHeroLayout}>
             {gridCols.map((xUnit) => {
               const x = unitToPxX(xUnit, heroSize.w);
@@ -448,7 +560,9 @@ export default function Words() {
             })}
           </View>
 
+          {/* Panneau de droite / bas */}
           <View style={styles.panel}>
+            {/* Score + index */}
             <View style={styles.headerRow}>
               <View style={styles.scoreCard}>
                 <Text style={styles.scoreLabel}>Score</Text>
@@ -462,8 +576,49 @@ export default function Words() {
               </View>
             </View>
 
-            <View style={{ flex: 1 }} />
+            {/* Historique (rectangle sous le score, prend la place restante) */}
+            <View style={styles.historyContainer}>
+              <Text style={styles.historyTitle}>Derniers mots joués</Text>
+              <FlatList
+                data={history}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.historyList}
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                renderItem={({ item }) => {
+                  let dateStr = String(item.date);
+                  try {
+                    dateStr = new Date(item.date).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                  } catch {}
+                  return (
+                    <View style={styles.historyRow}>
+                      <AvatarBubble
+                        avatar={item.avatar}
+                        username={item.username}
+                        size={36}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.historyWord}>
+                          &#34;{item.word}&#34;
+                        </Text>
+                        <Text style={styles.historyMeta}>
+                          {item.username} • {dateStr}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                }}
+                ListEmptyComponent={
+                  <Text style={styles.historyEmpty}>
+                    — aucun mot pour l’instant —
+                  </Text>
+                }
+              />
+            </View>
 
+            {/* Choix de type */}
             <View style={styles.typeRow}>
               <TouchableOpacity
                 style={[
@@ -520,6 +675,7 @@ export default function Words() {
               </TouchableOpacity>
             </View>
 
+            {/* Input + Send */}
             <View style={styles.formRow}>
               <View style={styles.inputWrapper}>
                 <TextField
@@ -560,31 +716,13 @@ const styles = StyleSheet.create({
     position: "relative",
   },
 
-  pixel: {
-    position: "absolute",
-  },
+  pixel: { position: "absolute" },
 
-  edgeH: {
-    position: "absolute",
-    height: 1,
-    backgroundColor: "#000",
-  },
-  edgeV: {
-    position: "absolute",
-    width: 1,
-    backgroundColor: "#000",
-  },
+  edgeH: { position: "absolute", height: 1, backgroundColor: "#000" },
+  edgeV: { position: "absolute", width: 1, backgroundColor: "#000" },
 
-  gridV: {
-    position: "absolute",
-    width: 1,
-    backgroundColor: "lightgrey",
-  },
-  gridH: {
-    position: "absolute",
-    height: 1,
-    backgroundColor: "lightgrey",
-  },
+  gridV: { position: "absolute", width: 1, backgroundColor: "lightgrey" },
+  gridH: { position: "absolute", height: 1, backgroundColor: "lightgrey" },
 
   panel: { flex: 1 },
 
@@ -619,6 +757,44 @@ const styles = StyleSheet.create({
 
   indexButton: { alignItems: "flex-end" },
 
+  historyContainer: {
+    flex: 1,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#EAEAEA",
+    overflow: "hidden",
+  },
+  historyTitle: {
+    fontWeight: "800",
+    color: COLORS.text,
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  historyList: { paddingBottom: 4 },
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 6,
+  },
+  historyWord: { fontWeight: "700", color: COLORS.text },
+  historyMeta: { color: COLORS.textLight, fontSize: 12, marginTop: 2 },
+  historyEmpty: {
+    textAlign: "center",
+    color: COLORS.textLight,
+    paddingVertical: 12,
+  },
+
+  fallbackAvatar: {
+    backgroundColor: COLORS.funPinkLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fallbackAvatarText: { color: "#fff", fontWeight: "800" },
+
   typeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -647,21 +823,11 @@ const styles = StyleSheet.create({
     borderColor: "#E3E5EC",
     opacity: 0.4,
   },
-  typePillText: {
-    fontWeight: "700",
-    color: COLORS.funPink,
-  },
-  typePillTextSelected: {
-    color: "#fff",
-  },
-  typePillTextDisabled: {
-    color: "#9AA0A6",
-  },
+  typePillText: { fontWeight: "700", color: COLORS.funPink },
+  typePillTextSelected: { color: "#fff" },
+  typePillTextDisabled: { color: "#9AA0A6" },
 
-  formRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  formRow: { flexDirection: "row", alignItems: "center" },
   inputWrapper: { flex: 1 },
   sendBtn: {
     width: 52,
@@ -672,8 +838,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 8,
   },
-  sendBtnDisabled: {
-    backgroundColor: COLORS.funPinkLight,
-    opacity: 0.4,
-  },
+  sendBtnDisabled: { backgroundColor: COLORS.funPinkLight, opacity: 0.4 },
 });
