@@ -12,11 +12,20 @@ type Player = {
   socketId: string;
   avatar?: string | AvatarConfig;
 };
+
 type PlayerJoinedPayload = {
   roomId: string;
   username: string;
   socketId: string;
   avatar?: string | AvatarConfig;
+};
+
+type PlayerDisconnectedPayload = {
+  roomId?: string;
+  socketId?: string;
+  username?: string;
+  actor?: "Mobile" | "PC";
+  device?: "mobile" | "pc";
 };
 
 const coerceAvatar = (raw?: unknown) => {
@@ -42,17 +51,20 @@ type GameWordsPayload = {
 
 export default function PlayerList() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const { connected, on, off } = useSocket();
+  const params = useLocalSearchParams<{ roomId?: string; players?: string }>();
+  const socket = useSocket(); // ⚠️ on garde la ref entière
   const { setRoomId, setWords } = useGame();
 
+  const currentRoomId = params.roomId;
   const initialPlayers: Player[] = params.players
-    ? JSON.parse(params.players as string)
+    ? JSON.parse(params.players)
     : [];
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
   useEffect(() => {
     const handlePlayerJoined = (payload: PlayerJoinedPayload) => {
+      if (payload?.roomId && currentRoomId && payload.roomId !== currentRoomId)
+        return;
       setPlayers((prev) => {
         if (prev.some((p) => p.socketId === payload.socketId)) return prev;
         return [
@@ -60,19 +72,38 @@ export default function PlayerList() {
           {
             username: payload.username,
             socketId: payload.socketId,
-            avatar: payload.avatar, // on stocke brut; on coerce à l'affichage
+            avatar: payload.avatar,
           },
         ];
       });
     };
 
+    const handlePlayerDisconnected = (payload: PlayerDisconnectedPayload) => {
+      if (__DEV__) console.log("[lobby:player:disconnected]", payload);
+
+      if (payload?.roomId && currentRoomId && payload.roomId !== currentRoomId)
+        return;
+
+      const source = (payload?.actor ?? payload?.device ?? "")
+        .toString()
+        .toLowerCase();
+
+      if (source === "mobile") {
+        setPlayers((prev) => {
+          if (payload?.socketId) {
+            return prev.filter((p) => p.socketId !== payload.socketId);
+          }
+          if (payload?.username) {
+            return prev.filter((p) => p.username !== payload.username);
+          }
+          return prev;
+        });
+      }
+    };
+
     const handleGameStart = (payload: GameStartPayload) => {
-      const roomIdFromParams =
-        (params.roomId as string | undefined) || undefined;
-      const roomId = payload?.roomId ?? roomIdFromParams;
-
+      const roomId = payload?.roomId ?? currentRoomId ?? undefined;
       if (roomId) setRoomId(roomId);
-
       router.replace({
         pathname: "/words",
         params: roomId ? { roomId } : undefined,
@@ -87,18 +118,20 @@ export default function PlayerList() {
       }
     };
 
-    if (connected) {
-      on("lobby:player:joined", handlePlayerJoined);
-      on("game:start:notify", handleGameStart);
-      on("game:word", handleGameWords);
-    }
+    if (!socket?.on || !socket?.off) return;
+
+    socket.on("lobby:player:joined", handlePlayerJoined);
+    socket.on("lobby:player:disconnected", handlePlayerDisconnected);
+    socket.on("game:start:notify", handleGameStart);
+    socket.on("game:word", handleGameWords);
 
     return () => {
-      off("lobby:player:joined", handlePlayerJoined);
-      off("game:start:notify", handleGameStart);
-      off("game:word", handleGameWords);
+      socket.off("lobby:player:joined", handlePlayerJoined);
+      socket.off("lobby:player:disconnected", handlePlayerDisconnected);
+      socket.off("game:start:notify", handleGameStart);
+      socket.off("game:word", handleGameWords);
     };
-  }, [connected, on, off, params.roomId, router, setRoomId, setWords]);
+  }, [socket, router, currentRoomId, setRoomId, setWords]);
 
   return (
     <View style={styles.container}>
@@ -112,7 +145,7 @@ export default function PlayerList() {
           <PlayerCard
             username={item.username}
             index={index}
-            avatarConfig={coerceAvatar(item.avatar)} // ✅ gère string + objet
+            avatarConfig={coerceAvatar(item.avatar)}
           />
         )}
         ListEmptyComponent={

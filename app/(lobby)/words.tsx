@@ -573,11 +573,6 @@ export default function Words() {
           <View style={styles.panel}>
             {/* Score + index */}
             <View style={styles.headerRow}>
-              <View style={styles.scoreCard}>
-                <Text style={styles.scoreLabel}>Score</Text>
-                <Text style={styles.scoreValue}>0</Text>
-              </View>
-
               <View style={styles.indexButton}>
                 <WordIndex words={words}>
                   <FontAwesome6 name="book-open" size={24} color="#fff" />
