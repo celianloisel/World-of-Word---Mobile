@@ -12,7 +12,7 @@ import { io, Socket } from "socket.io-client";
 interface SocketContextType {
   socket: Socket | null;
   connected: boolean;
-  emit: (event: string, payload?: any) => void;
+  emit: (event: string, payload?: any, ack?: (response?: any) => void) => void;
   on: <T = any>(event: string, handler: (data: T) => void) => void;
   off: <T = any>(event: string, handler: (data: T) => void) => void;
   isInLobby: boolean;
@@ -65,9 +65,16 @@ export function SocketProvider({ children, url }: SocketProviderProps) {
     };
   }, [url]);
 
-  const emit = useCallback((event: string, payload?: any) => {
-    socketRef.current?.emit(event, payload);
-  }, []);
+  const emit = useCallback(
+    (event: string, payload?: any, ack?: (response?: any) => void) => {
+      if (ack) {
+        socketRef.current?.emit(event, payload, ack);
+      } else {
+        socketRef.current?.emit(event, payload);
+      }
+    },
+    [],
+  );
 
   const on = useCallback(
     <T = any,>(event: string, handler: (data: T) => void) => {

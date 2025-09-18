@@ -15,6 +15,7 @@ import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
+import Toast from "react-native-toast-message";
 
 const TYPE_LABELS: Record<string, string> = {
   general: "Général",
@@ -36,7 +37,7 @@ export default function Words() {
     [words, lower],
   );
 
-  const foundTypes: string[] = found?.types ?? [];
+  const foundTypes: string[] = useMemo(() => found?.types ?? [], [found]);
   const hasMultipleTypes = foundTypes.length > 1;
 
   const platformType = useMemo(
@@ -76,9 +77,26 @@ export default function Words() {
       payload.platform = "a25d";
     }
 
-    emit(eventName, payload);
-    setInput("");
-    setSelectedType(null);
+    emit(eventName, payload, (response?: any) => {
+      if (response && response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Mot envoyé",
+          text2: `\"${raw}\" a été ajouté`,
+          visibilityTime: 2000,
+        });
+        setInput("");
+        setSelectedType(null);
+      } else {
+        const reason = response?.error || "Erreur inconnue";
+        Toast.show({
+          type: "error",
+          text1: "Échec de l'envoi",
+          text2: String(reason),
+          visibilityTime: 2500,
+        });
+      }
+    });
   }, [emit, input, found, foundTypes, selectedType]);
 
   const handleWordSearch = useCallback((text: string) => {

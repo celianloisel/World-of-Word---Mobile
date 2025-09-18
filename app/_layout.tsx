@@ -1,5 +1,7 @@
 import { Stack } from "expo-router";
 import { ImageBackground, StyleSheet, View } from "react-native";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "@/app/toastLayouts";
 import { SocketProvider } from "@/contexts/socketContext";
 import { GameProvider } from "@/contexts/gameContext";
 
@@ -24,6 +26,7 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: "transparent" },
               }}
             />
+            <Toast config={toastConfig} />
           </View>
         </ImageBackground>
       </GameProvider>

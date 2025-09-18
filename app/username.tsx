@@ -11,6 +11,7 @@ import { useSocket } from "@/contexts/socketContext";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 import AvatarGenerator from "@/components/Avatar";
+import Toast from "react-native-toast-message";
 
 type Player = { username: string; socketId: string };
 type JoinSuccessPayload = {
@@ -26,6 +27,8 @@ export default function Username() {
   const { connected, emit, on, off } = useSocket();
   const [username, setUsername] = useState("");
   const [avatarJson, setAvatarJson] = useState<string | null>(null);
+  const MAX_USERNAME_LEN = 30;
+  const [submitting, setSubmitting] = useState(false);
 
   const token = params.token as string;
   // const roomId = params.roomId as string;
@@ -45,7 +48,11 @@ export default function Username() {
     return () => off("lobby:join:success", handleJoinSuccess);
   }, [on, off, router]);
 
-  const canSend = connected && username.trim().length > 0;
+  const canSend =
+    connected &&
+    !submitting &&
+    username.trim().length > 0 &&
+    username.length <= MAX_USERNAME_LEN;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -60,12 +67,40 @@ export default function Username() {
                 placeholder="Entrez votre pseudo"
                 autoCapitalize="none"
                 returnKeyType="done"
+                maxLength={MAX_USERNAME_LEN}
               />
               <PrimaryButton
-                title="Envoyer"
-                onPress={() =>
-                  emit("lobby:join", { token, username, avatar: avatarJson })
-                }
+                title={submitting ? "Envoi..." : "Envoyer"}
+                onPress={() => {
+                  if (!canSend) return;
+                  setSubmitting(true);
+                  emit(
+                    "lobby:join",
+                    { token, username, avatar: avatarJson },
+                    (response?: any) => {
+                      if (response && response.ok) {
+                        Toast.show({
+                          type: "success",
+                          text1: "Connexion au lobby",
+                          text2:
+                            "Requête envoyée, en attente de confirmation...",
+                          visibilityTime: 1500,
+                        });
+                        // Navigation via l'événement 'lobby:join:success'
+                      } else {
+                        const reason =
+                          response?.error || "Impossible de rejoindre le lobby";
+                        Toast.show({
+                          type: "error",
+                          text1: "Échec de la connexion",
+                          text2: String(reason),
+                          visibilityTime: 2500,
+                        });
+                        setSubmitting(false);
+                      }
+                    },
+                  );
+                }}
                 disabled={!canSend}
               />
             </View>
