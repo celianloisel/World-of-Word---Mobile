@@ -74,6 +74,7 @@ export default function Username() {
                 onPress={() => {
                   if (!canSend) return;
                   setSubmitting(true);
+                  console.log(avatarJson);
                   emit(
                     "lobby:join",
                     { token, username, avatar: avatarJson },
