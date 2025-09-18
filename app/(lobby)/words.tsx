@@ -24,12 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const isPlatformType = (t: string | null) => !!t && /(^|:)platform$/.test(t);
 
-type PlatformItem = {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-};
+type PlatformItem = { id: string; x: number; y: number; width: number };
 
 export default function Words() {
   const VIEW_WIDTH_UNITS = 100;
@@ -63,13 +58,79 @@ export default function Words() {
 
   const pctToPxY = useCallback((yPct: number, totalH: number) => {
     if (!Number.isFinite(yPct) || totalH <= 0) return 0;
-    return (Math.max(0, yPct) / 100) * totalH;
+    return totalH - (Math.max(0, yPct) / 100) * totalH;
   }, []);
 
   const onHeroLayout = useCallback((e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setHeroSize({ w: width, h: height });
   }, []);
+
+  const groupedById = useMemo(() => {
+    const map = new Map<
+      string,
+      { cells: { x: number; y: number }[]; set: Set<string> }
+    >();
+    for (const p of platforms) {
+      if (!map.has(p.id)) map.set(p.id, { cells: [], set: new Set() });
+      const bucket = map.get(p.id)!;
+
+      for (let i = 0; i < p.width; i++) {
+        const cx = Math.round(p.x) + i;
+        const topY = Math.round(p.y);
+        for (let cy = 0; cy <= topY; cy++) {
+          const key = `${cx},${cy}`;
+          if (!bucket.set.has(key)) {
+            bucket.set.add(key);
+            bucket.cells.push({ x: cx, y: cy });
+          }
+        }
+      }
+    }
+    return map;
+  }, [platforms]);
+
+  const edgesById = useMemo(() => {
+    type Edges = {
+      H: Array<{ cx: number; y: number }>;
+      V: Array<{ x: number; cy: number }>;
+    };
+    const out = new Map<string, Edges>();
+
+    groupedById.forEach((bucket, id) => {
+      const edgeSet = new Set<string>();
+
+      for (const { x: cx, y: cy } of bucket.cells) {
+        const topKey = `H|${cx}|${2 * cy + 1}`;
+        const bottomKey = `H|${cx}|${2 * cy - 1}`;
+        const leftKey = `V|${2 * cx - 1}|${cy}`;
+        const rightKey = `V|${2 * cx + 1}|${cy}`;
+        for (const k of [topKey, bottomKey, leftKey, rightKey]) {
+          if (edgeSet.has(k)) edgeSet.delete(k);
+          else edgeSet.add(k);
+        }
+      }
+
+      const H: Edges["H"] = [];
+      const V: Edges["V"] = [];
+      edgeSet.forEach((k) => {
+        const [type, a, b] = k.split("|");
+        if (type === "H") {
+          const cx = parseInt(a, 10);
+          const y = parseInt(b, 10) / 2;
+          H.push({ cx, y });
+        } else {
+          const x = parseInt(a, 10) / 2;
+          const cy = parseInt(b, 10);
+          V.push({ x, cy });
+        }
+      });
+
+      out.set(id, { H, V });
+    });
+
+    return out;
+  }, [groupedById]);
 
   useEffect(() => {
     if (!on || !off) return;
@@ -87,13 +148,10 @@ export default function Words() {
       setViewStart((prev) => {
         const right = x + width;
         const viewEnd = prev + VIEW_WIDTH_UNITS;
-
-        if (right > viewEnd - VIEW_PADDING_UNITS) {
+        if (right > viewEnd - VIEW_PADDING_UNITS)
           return right - VIEW_WIDTH_UNITS + VIEW_PADDING_UNITS;
-        }
-        if (x < prev + VIEW_PADDING_UNITS) {
+        if (x < prev + VIEW_PADDING_UNITS)
           return Math.max(0, x - VIEW_PADDING_UNITS);
-        }
         return prev;
       });
     };
@@ -116,7 +174,6 @@ export default function Words() {
     () => words.find((w) => w.text.toLocaleLowerCase("fr") === lower),
     [words, lower],
   );
-
   const foundTypes: string[] = found?.types ?? [];
   const hasMultipleTypes = foundTypes.length > 1;
   const platformType = useMemo(
@@ -145,16 +202,13 @@ export default function Words() {
 
     const typeCandidate =
       foundTypes.length === 1 ? foundTypes[0] : selectedType || "event:player";
-
     const platform = isPlatformType(typeCandidate);
     const eventName = platform ? "event:add:platform" : "event:add";
     const payload: any = {
       word: raw,
       type: platform ? "event:platform" : "event:player",
     };
-    if (platform) {
-      payload.platform = "a25d";
-    }
+    if (platform) payload.platform = "a25d";
 
     emit(eventName, payload);
     setInput("");
@@ -180,6 +234,11 @@ export default function Words() {
     [],
   );
 
+  const pixelW = heroSize.w / VIEW_WIDTH_UNITS;
+  const pixelH = heroSize.h / 100;
+
+  const viewEnd = viewStart + VIEW_WIDTH_UNITS;
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -189,7 +248,6 @@ export default function Words() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
           <View style={styles.hero} onLayout={onHeroLayout}>
-            {/* Grille */}
             {gridCols.map((xUnit) => {
               const x = unitToPxX(xUnit, heroSize.w);
               return (
@@ -209,37 +267,130 @@ export default function Words() {
               );
             })}
 
-            {/* Plateformes */}
-            {platforms.flatMap((p, idx) => {
-              const pixels: JSX.Element[] = [];
-              const pixelW = heroSize.w / VIEW_WIDTH_UNITS;
-              const pixelH = heroSize.h / 100;
-
-              for (let i = 0; i < p.width; i++) {
-                const cellX = p.x - 0.5 + i;
-                const cellY = p.y - 0.5;
-
-                const viewEnd = viewStart + VIEW_WIDTH_UNITS;
-                if (cellX + 1 < viewStart - 1 || cellX > viewEnd + 1) continue;
-
-                const left = unitToPxX(cellX, heroSize.w);
-                const top = pctToPxY(cellY, heroSize.h);
-
-                pixels.push(
+            {Array.from(groupedById.entries()).flatMap(([id, bucket]) =>
+              bucket.cells.map(({ x: cx, y: cy }) => {
+                if (cx + 1 < viewStart - 1 || cx > viewEnd + 1) return null;
+                const left = unitToPxX(cx - 0.5, heroSize.w);
+                const top = pctToPxY(cy - 0.5, heroSize.h);
+                return (
                   <View
-                    key={`${p.id}-${idx}-${i}`}
+                    key={`cell-${id}-${cx}-${cy}`}
                     style={[
                       styles.pixel,
-                      { left, top, width: pixelW, height: pixelH },
+                      {
+                        left,
+                        top,
+                        width: pixelW,
+                        height: pixelH,
+                        backgroundColor: "#8B4513",
+                      },
                     ]}
-                  />,
+                    pointerEvents="none"
+                  />
                 );
-              }
-              return pixels;
+              }),
+            )}
+
+            {Array.from(edgesById.entries()).flatMap(([id, edges]) => {
+              const lines: JSX.Element[] = [];
+              const HbyY = new Map<number, number[]>();
+              edges.H.forEach(({ cx, y }) => {
+                if (!HbyY.has(y)) HbyY.set(y, []);
+                HbyY.get(y)!.push(cx);
+              });
+
+              HbyY.forEach((cxs, y) => {
+                cxs.sort((a, b) => a - b);
+                let runStart = cxs[0];
+                let prev = cxs[0];
+                for (let i = 1; i <= cxs.length; i++) {
+                  const cur = cxs[i];
+                  if (cur !== prev + 1) {
+                    const unitStart = runStart - 0.5;
+                    const unitEnd = prev + 0.5;
+                    const viewEnd = viewStart + VIEW_WIDTH_UNITS;
+                    if (!(unitEnd < viewStart || unitStart > viewEnd)) {
+                      const left = unitToPxX(
+                        Math.max(unitStart, viewStart),
+                        heroSize.w,
+                      );
+                      const rightPx = unitToPxX(
+                        Math.min(unitEnd, viewEnd),
+                        heroSize.w,
+                      );
+                      const top = pctToPxY(y, heroSize.h);
+                      lines.push(
+                        <View key={`H-bg-${id}-${y}-${runStart}-${prev}`}>
+                          <View
+                            style={{
+                              position: "absolute",
+                              left,
+                              top: top,
+                              width: Math.max(1, rightPx - left),
+                              height: 2,
+                              backgroundColor: "lime",
+                            }}
+                          />
+                          <View
+                            style={{
+                              position: "absolute",
+                              left,
+                              top,
+                              width: Math.max(1, rightPx - left),
+                              height: 1,
+                              backgroundColor: "#000",
+                            }}
+                          />
+                        </View>,
+                      );
+                    }
+                    runStart = cur;
+                  }
+                  prev = cur;
+                }
+              });
+
+              const VbyX = new Map<number, number[]>();
+              edges.V.forEach(({ x, cy }) => {
+                if (!VbyX.has(x)) VbyX.set(x, []);
+                VbyX.get(x)!.push(cy);
+              });
+
+              VbyX.forEach((cys, x) => {
+                cys.sort((a, b) => a - b);
+                let runStart = cys[0];
+                let prev = cys[0];
+                for (let i = 1; i <= cys.length; i++) {
+                  const cur = cys[i];
+                  if (cur !== prev + 1) {
+                    const unitTop = prev + 0.5;
+                    const unitBottom = runStart - 0.5;
+                    const viewEnd = viewStart + VIEW_WIDTH_UNITS;
+                    if (!(x < viewStart || x > viewEnd)) {
+                      const left = unitToPxX(x, heroSize.w);
+                      const top = pctToPxY(unitTop, heroSize.h);
+                      const bottomPx = pctToPxY(unitBottom, heroSize.h);
+                      lines.push(
+                        <View
+                          key={`V-${id}-${x}-${runStart}-${prev}`}
+                          style={[
+                            styles.edgeV,
+                            { left, top, height: Math.max(1, bottomPx - top) },
+                          ]}
+                          pointerEvents="none"
+                        />,
+                      );
+                    }
+                    runStart = cur;
+                  }
+                  prev = cur;
+                }
+              });
+
+              return lines;
             })}
           </View>
 
-          {/* Panel du bas */}
           <View style={styles.panel}>
             <View style={styles.headerRow}>
               <View style={styles.scoreCard}>
@@ -256,13 +407,12 @@ export default function Words() {
 
             <View style={{ flex: 1 }} />
 
-            {/* Boutons type */}
             <View style={styles.typeRow}>
               <TouchableOpacity
                 style={[
                   styles.typePill,
                   generalEnabled ? null : styles.typePillDisabled,
-                  selectedType && selectedType === generalType
+                  selectedType && selectedType === (generalType ?? "")
                     ? styles.typePillSelected
                     : null,
                 ]}
@@ -275,7 +425,7 @@ export default function Words() {
                   style={[
                     styles.typePillText,
                     generalEnabled ? null : styles.typePillTextDisabled,
-                    selectedType && selectedType === generalType
+                    selectedType && selectedType === (generalType ?? "")
                       ? styles.typePillTextSelected
                       : null,
                   ]}
@@ -288,7 +438,7 @@ export default function Words() {
                 style={[
                   styles.typePill,
                   platformEnabled ? null : styles.typePillDisabled,
-                  selectedType && selectedType === platformType
+                  selectedType && selectedType === (platformType ?? "")
                     ? styles.typePillSelected
                     : null,
                 ]}
@@ -303,7 +453,7 @@ export default function Words() {
                   style={[
                     styles.typePillText,
                     platformEnabled ? null : styles.typePillTextDisabled,
-                    selectedType && selectedType === platformType
+                    selectedType && selectedType === (platformType ?? "")
                       ? styles.typePillTextSelected
                       : null,
                   ]}
@@ -313,7 +463,6 @@ export default function Words() {
               </TouchableOpacity>
             </View>
 
-            {/* Input */}
             <View style={styles.formRow}>
               <View style={styles.inputWrapper}>
                 <TextField
@@ -346,7 +495,7 @@ const styles = StyleSheet.create({
   hero: {
     width: "100%",
     aspectRatio: 16 / 9,
-    backgroundColor: "#fff",
+    backgroundColor: "#87CEEB",
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E6E8EF",
@@ -356,18 +505,28 @@ const styles = StyleSheet.create({
 
   pixel: {
     position: "absolute",
-    backgroundColor: "#111",
+  },
+
+  edgeH: {
+    position: "absolute",
+    height: 1,
+    backgroundColor: "#000",
+  },
+  edgeV: {
+    position: "absolute",
+    width: 1,
+    backgroundColor: "#000",
   },
 
   gridV: {
     position: "absolute",
     width: 1,
-    backgroundColor: "#EEF0F5",
+    backgroundColor: "lightgrey",
   },
   gridH: {
     position: "absolute",
     height: 1,
-    backgroundColor: "#F1F3F8",
+    backgroundColor: "lightgrey",
   },
 
   panel: { flex: 1 },
