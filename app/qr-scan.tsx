@@ -9,6 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { QrScanner } from "@/components/QrScanner";
+import Toast from "react-native-toast-message";
 
 export default function QrScan() {
   const router = useRouter();
@@ -33,8 +34,13 @@ export default function QrScan() {
                   token: parsed.qrPayload.joinToken,
                 },
               });
-            } catch (e) {
-              console.error("QR invalide", e);
+            } catch {
+              Toast.show({
+                type: "error",
+                text1: "QR invalide",
+                text2: "Le code scanné n'est pas reconnu",
+                visibilityTime: 2000,
+              });
             }
           }}
           boxSize={300}
