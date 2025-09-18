@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { QrScanner } from "@/components/QrScanner";
 import Toast from "react-native-toast-message";
+import BackButton from "@/components/BackButton";
 
 export default function QrScan() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function QrScan() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackButton style={styles.backBtn} />
       <View style={styles.header}>
         <Text style={styles.title}>Scanne le QR de la salle</Text>
       </View>
@@ -57,6 +59,7 @@ export default function QrScan() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "space-between" },
+  backBtn: { position: "absolute", top: 6, left: 12, zIndex: 10 },
   header: { width: "100%", alignItems: "center" },
   title: {
     color: "white",

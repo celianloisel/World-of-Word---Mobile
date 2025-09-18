@@ -12,6 +12,7 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { TextField } from "@/components/TextField";
 import AvatarGenerator from "@/components/Avatar";
 import Toast from "react-native-toast-message";
+import BackButton from "@/components/BackButton";
 
 type Player = { username: string; socketId: string };
 type JoinSuccessPayload = {
@@ -82,6 +83,7 @@ export default function Username() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
+        <BackButton style={styles.backBtn} />
         <View style={styles.inner}>
           <View style={styles.topContainer}>
             <AvatarGenerator onExportJSON={(json) => setAvatarJson(json)} />
@@ -140,6 +142,8 @@ export default function Username() {
 const styles = StyleSheet.create({
   container: { flex: 1, marginBottom: 48 },
   inner: { flex: 1, justifyContent: "space-between" },
+  backBtn: { position: "absolute", top: 14, left: 12, zIndex: 10 },
+
   topContainer: {
     flex: 1,
     justifyContent: "center",
