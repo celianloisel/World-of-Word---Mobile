@@ -77,6 +77,7 @@ export default function Username() {
   const canSend =
     connected &&
     !submitting &&
+    avatarJson !== null &&
     username.trim().length > 0 &&
     username.length <= MAX_USERNAME_LEN;
 
@@ -86,7 +87,12 @@ export default function Username() {
         <BackButton style={styles.backBtn} />
         <View style={styles.inner}>
           <View style={styles.topContainer}>
-            <AvatarGenerator onExportJSON={(json) => setAvatarJson(json)} />
+            <AvatarGenerator
+              onExportJSON={(json) => {
+                console.log("Avatar JSON:", json);
+                setAvatarJson(json);
+              }}
+            />
             <View style={styles.formContainer}>
               <TextField
                 value={username}
@@ -101,7 +107,6 @@ export default function Username() {
                 onPress={() => {
                   if (!canSend) return;
                   setSubmitting(true);
-                  console.log(avatarJson);
                   emit(
                     "lobby:join",
                     { token, username, avatar: avatarJson },
