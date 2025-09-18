@@ -206,17 +206,28 @@ export default function Words() {
     const typeCandidate =
       foundTypes.length === 1 ? foundTypes[0] : selectedType || "event:player";
     const platform = isPlatformType(typeCandidate);
+
+    if (platform && !selectedGroup) {
+      console.log("❌ Vous devez sélectionner une plateforme avant d'envoyer.");
+      return;
+    }
+
     const eventName = platform ? "event:add:platform" : "event:add";
     const payload: any = {
       word: raw,
       type: platform ? "event:platform" : "event:player",
     };
-    if (platform) payload.platform = "a25d";
+
+    if (platform) {
+      payload.platform = selectedGroup;
+    }
 
     emit(eventName, payload);
+    console.log("✅ Mot envoyé :", payload);
+
     setInput("");
     setSelectedType(null);
-  }, [emit, input, found, foundTypes, selectedType]);
+  }, [emit, input, found, foundTypes, selectedType, selectedGroup]);
 
   const handleWordSearch = useCallback((text: string) => setInput(text), []);
 
