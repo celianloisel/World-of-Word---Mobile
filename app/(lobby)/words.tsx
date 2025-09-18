@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
   LayoutChangeEvent,
+  Pressable,
 } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { WordIndex } from "@/components/WordIndex";
@@ -16,7 +17,6 @@ import { TextField } from "@/components/TextField";
 import { useGame } from "@/contexts/gameContext";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useSocket } from "@/contexts/socketContext";
-import Toast from "react-native-toast-message";
 
 const TYPE_LABELS: Record<string, string> = {
   general: "Général",
@@ -36,9 +36,10 @@ export default function Words() {
   const { words } = useGame();
   const [input, setInput] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const { emit, on, off } = useSocket() as {
-    emit: (event: string, payload?: any) => void;
+    emit: (event: string, payload?: any, cb?: (res: any) => void) => void;
     on?: (event: string, cb: (...args: any[]) => void) => void;
     off?: (event: string, cb: (...args: any[]) => void) => void;
   };
@@ -212,26 +213,9 @@ export default function Words() {
     };
     if (platform) payload.platform = "a25d";
 
-    emit(eventName, payload, (response?: any) => {
-      if (response && response.ok) {
-        Toast.show({
-          type: "success",
-          text1: "Mot envoyé",
-          text2: `\"${raw}\" a été ajouté`,
-          visibilityTime: 2000,
-        });
-        setInput("");
-        setSelectedType(null);
-      } else {
-        const reason = response?.error || "Erreur inconnue";
-        Toast.show({
-          type: "error",
-          text1: "Échec de l'envoi",
-          text2: String(reason),
-          visibilityTime: 2500,
-        });
-      }
-    });
+    emit(eventName, payload);
+    setInput("");
+    setSelectedType(null);
   }, [emit, input, found, foundTypes, selectedType]);
 
   const handleWordSearch = useCallback((text: string) => setInput(text), []);
@@ -292,8 +276,11 @@ export default function Words() {
                 const left = unitToPxX(cx - 0.5, heroSize.w);
                 const top = pctToPxY(cy - 0.5, heroSize.h);
                 return (
-                  <View
+                  <Pressable
                     key={`cell-${id}-${cx}-${cy}`}
+                    onPress={() => {
+                      setSelectedGroup(id === selectedGroup ? null : id);
+                    }}
                     style={[
                       styles.pixel,
                       {
@@ -301,10 +288,13 @@ export default function Words() {
                         top,
                         width: pixelW,
                         height: pixelH,
-                        backgroundColor: "#8B4513",
+                        backgroundColor:
+                          selectedGroup === id ? "#32CD32" : "#8B4513",
+                        borderWidth: selectedGroup === id ? 2 : 0,
+                        borderColor:
+                          selectedGroup === id ? "yellow" : "transparent",
                       },
                     ]}
-                    pointerEvents="none"
                   />
                 );
               }),
