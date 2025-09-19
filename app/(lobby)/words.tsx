@@ -268,6 +268,7 @@ export default function Words() {
         text2: "Le mot a bien été envoyé",
         visibilityTime: 2000,
       });
+      setCooldownUntil(Date.now() + COOLDOWN_MS);
       setInput("");
       setSelectedGroup(null);
       setSelectedType(null);
@@ -337,6 +338,22 @@ export default function Words() {
     [words, lower],
   );
 
+  // Cooldown d’envoi (3s après un envoi réussi)
+  const COOLDOWN_MS = 3000;
+  const [cooldownUntil, setCooldownUntil] = useState<number>(0);
+  const [nowTs, setNowTs] = useState<number>(Date.now());
+
+  // Tick léger pour rafraîchir l’affichage du temps restant
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const id = setInterval(() => setNowTs(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
+
+  const remainingMs = Math.max(0, cooldownUntil - nowTs);
+  const cooldownActive = remainingMs > 0;
+  const cooldownSec = Math.ceil(remainingMs / 1000);
+
   const foundTypes: string[] = found?.types ?? [];
   const hasMultipleTypes = foundTypes.length > 1;
   const platformType = useMemo(
@@ -358,9 +375,20 @@ export default function Words() {
   const canSend =
     input.trim().length > 0 &&
     (!hasMultipleTypes || !!selectedType) &&
-    (!(selectedType && isPlatformType(selectedType)) || !!selectedGroup);
+    (!(selectedType && isPlatformType(selectedType)) || !!selectedGroup) &&
+    !cooldownActive; // ⬅️ ajoute ceci
 
   const handleSend = useCallback(() => {
+    if (cooldownActive) {
+      Toast.show({
+        type: "info",
+        text1: "Patiente un instant",
+        text2: `Tu pourras renvoyer un mot dans ${cooldownSec}s.`,
+        visibilityTime: 1500,
+      });
+      return;
+    }
+
     const raw = input.trim();
     if (!raw) return;
     if (found && foundTypes.length > 1 && !selectedType) return;
@@ -688,7 +716,9 @@ export default function Words() {
                   placeholder="Entrez un mot"
                   autoCapitalize="none"
                   returnKeyType="done"
-                  onSubmitEditing={handleSend}
+                  onSubmitEditing={() => {
+                    if (canSend) handleSend();
+                  }}
                 />
               </View>
               <TouchableOpacity
@@ -696,7 +726,15 @@ export default function Words() {
                 onPress={handleSend}
                 disabled={!canSend}
               >
-                <FontAwesome5 name="paper-plane" size={20} color="#fff" />
+                {cooldownActive ? (
+                  <Text
+                    style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}
+                  >
+                    {cooldownSec}s
+                  </Text>
+                ) : (
+                  <FontAwesome5 name="paper-plane" size={20} color="#fff" />
+                )}
               </TouchableOpacity>
             </View>
           </View>
